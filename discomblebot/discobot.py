@@ -25,6 +25,8 @@ async def on_message(message):
 
 async def read_comm_queue(comm_queue):
     global channel
+    while channel is None:
+        await asyncio.sleep(1)
     while True:
         with concurrent.futures.ThreadPoolExecutor() as pool:
             str = await client.loop.run_in_executor(pool, comm_queue.get)
@@ -36,12 +38,21 @@ async def read_cmd_queue(cmd_queue):
     while True:
         with concurrent.futures.ThreadPoolExecutor() as pool:
             str = await client.loop.run_in_executor(pool, cmd_queue.get)
-            print("Discord bot stopping: %s" % str)
-            sys.exit(0)
+            if str == "quit":
+                print("Discord bot stopping on command: %s" % str)
+                # Does not seem to make client.run() stop
+                await client.close()
+                break
+            else:
+                print("Discord bot unknown command: %s" % str)
 
 def run(comm_queue, cmd_queue, config):
     global channel_id
     channel_id = int(config.channel)
     client.loop.create_task(read_comm_queue(comm_queue))
     client.loop.create_task(read_cmd_queue(cmd_queue))
-    client.run(config.token)
+    try:
+        client.run(config.token)
+    except KeyboardInterrupt:
+        print("Discord bot stopping on its own")
+    print("Discord bot final goodbye")

@@ -12,13 +12,18 @@ class MumbleBot:
 
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the end of the connection process
-        self.mumble.users.myself.mute() # mute the user (just to make clear he don't speak)
+        # mute and deafen the user (just to make clear he don't speak or listen)
+        self.mumble.users.myself.mute()
+        self.mumble.users.myself.deafen()
 
     def loop(self):
-        """while self.mumble.is_alive():
-            time.sleep(1)"""
-        str = self.cmd_queue.get()
-        print("Mumble bot stopping on command: %s" % str)
+        while self.mumble.is_alive():
+            str = self.cmd_queue.get()
+            if str == "quit":
+                print("Mumble bot stopping on command: %s" % str)
+                break
+            else:
+                print("Mumble bot unknown command: %s" % str)
 
     def user_created(self, user):
         """A user is connected on the server.  Create the specific structure with the local informations"""
@@ -36,3 +41,4 @@ def run(comm_queue, cmd_queue, config):
         bot.loop()
     except KeyboardInterrupt:
         print("Mumble bot stopping on its own")
+    print("Mumble bot final goodbye")

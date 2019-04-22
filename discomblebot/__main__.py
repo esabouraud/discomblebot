@@ -7,6 +7,23 @@ from discomblebot import discobot
 from discomblebot import mumbot
 
 
+def loop(discobot_cmd_queue, mumbot_cmd_queue):
+    while True:
+        #print("bleigh")
+        try:
+            cmd = input("Enter command:")
+        # handle bad KeyboardInterrupt/input() interactions (https://stackoverflow.com/a/31131378)
+        except EOFError:
+            time.sleep(1)
+        if cmd == "quit":
+            print("Quitting")
+            break
+        elif cmd == "status":
+            discobot_cmd_queue.put_nowait(cmd)
+            mumbot_cmd_queue.put_nowait(cmd)
+        else:
+            print("Unknown command %s" % cmd)
+
 def main():
     parser = argparse.ArgumentParser(description="Run discord bot")
     parser.add_argument("-f", "--file", dest="conf_file", default=None, help="Discord access token")
@@ -20,6 +37,7 @@ def main():
     if options.debug_discord and options.debug_mumble:
         parser.error("Cannot debug both bots simultaneously")
 
+    print("Staring discomblebot")
     discord_config, mumble_config = confbot.load_configuration(options.conf_file)
     bot_comm_queue = Queue()
     discobot_cmd_queue = Queue()
@@ -30,19 +48,18 @@ def main():
     mbp.start()
 
     try:
-        while True:
-            print("bleigh")
-            time.sleep(60)
+        loop(discobot_cmd_queue, mumbot_cmd_queue)
     except KeyboardInterrupt:
         print("Terminating discomblebot")
 
     #Give bots a chance to exit gracefully
     discobot_cmd_queue.put_nowait("quit")
+    mumbot_cmd_queue.put_nowait("quit")
+
     dbp.join(5)
     if dbp.is_alive():
         print("Force Discord bot exit")
         dbp.terminate()
-    mumbot_cmd_queue.put_nowait("quit")
     mbp.join(5)
     if mbp.is_alive():
         print("Force Mumble bot exit")
