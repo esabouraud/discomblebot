@@ -44,7 +44,7 @@ def main():
     bot_comm_queue = Queue()
     discobot_cmd_queue = Queue()
     mumbot_cmd_queue = Queue()
-    dbp = Process(target=discobot.run, args=(bot_comm_queue, discobot_cmd_queue, discord_config))
+    dbp = Process(target=discobot.run, args=(bot_comm_queue, discobot_cmd_queue, mumbot_cmd_queue, discord_config))
     dbp.start()
     mbp = Process(target=mumbot.run, args=(bot_comm_queue, mumbot_cmd_queue, mumble_config))
     mbp.start()
