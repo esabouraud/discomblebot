@@ -1,6 +1,8 @@
-import asyncio
-import discord
+import sys
 import queue
+import asyncio
+import concurrent.futures
+import discord
 
 client = discord.Client()
 channel_id = None
@@ -21,20 +23,25 @@ async def on_message(message):
     if message.content.startswith("$hello"):
         await message.channel.send("Hello!")
 
-async def read_queue(dm_queue):
+async def read_comm_queue(comm_queue):
     global channel
     while True:
-        try:
-            str = dm_queue.get_nowait()
-            #print("data read from queue: %s" % str)
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            str = await client.loop.run_in_executor(pool, comm_queue.get)
+            print("data read from queue: %s" % str)
             if channel:
                 await channel.send(str)
-        except queue.Empty:
-            pass
-        await asyncio.sleep(1)
 
-def run(dm_queue, config):
+async def read_cmd_queue(cmd_queue):
+    while True:
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            str = await client.loop.run_in_executor(pool, cmd_queue.get)
+            print("Discord bot stopping: %s" % str)
+            sys.exit(0)
+
+def run(comm_queue, cmd_queue, config):
     global channel_id
     channel_id = int(config.channel)
-    client.loop.create_task(read_queue(dm_queue))
+    client.loop.create_task(read_comm_queue(comm_queue))
+    client.loop.create_task(read_cmd_queue(cmd_queue))
     client.run(config.token)

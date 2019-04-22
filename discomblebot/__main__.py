@@ -1,4 +1,5 @@
 import argparse
+import time
 from multiprocessing import Process, Queue
 
 from discomblebot import confbot
@@ -20,22 +21,32 @@ def main():
         parser.error("Cannot debug both bots simultaneously")
 
     discord_config, mumble_config = confbot.load_configuration(options.conf_file)
-    q = Queue()
-    if options.debug_discord:
-        discobot.run(q, discord_config)
-    else:
-        dbp = Process(target=discobot.run, args=(q, discord_config))
-        dbp.start()
-    if options.debug_mumble:
-        mumbot.run(q, mumble_config)
-    else:
-        mbp = Process(target=mumbot.run, args=(q, mumble_config))
-        mbp.start()
-    print("bleigh")
-    if not options.debug_discord:
-        dbp.join()
-    if not options.debug_mumble:
-        mbp.join()
+    bot_comm_queue = Queue()
+    discobot_cmd_queue = Queue()
+    mumbot_cmd_queue = Queue()
+    dbp = Process(target=discobot.run, args=(bot_comm_queue, discobot_cmd_queue, discord_config))
+    dbp.start()
+    mbp = Process(target=mumbot.run, args=(bot_comm_queue, mumbot_cmd_queue, mumble_config))
+    mbp.start()
+
+    try:
+        while True:
+            print("bleigh")
+            time.sleep(60)
+    except KeyboardInterrupt:
+        print("Terminating discomblebot")
+
+    #Give bots a chance to exit gracefully
+    discobot_cmd_queue.put_nowait("quit")
+    dbp.join(5)
+    if dbp.is_alive():
+        print("Force Discord bot exit")
+        dbp.terminate()
+    mumbot_cmd_queue.put_nowait("quit")
+    mbp.join(5)
+    if mbp.is_alive():
+        print("Force Mumble bot exit")
+        mbp.terminate()
 
 
 if __name__ == "__main__":
