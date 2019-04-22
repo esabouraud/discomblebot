@@ -30,7 +30,7 @@ async def read_comm_queue(comm_queue):
     while True:
         with concurrent.futures.ThreadPoolExecutor() as pool:
             str = await client.loop.run_in_executor(pool, comm_queue.get)
-            print("data read from queue: %s" % str)
+            print("Discord bot read data from queue: %s" % str)
             if channel:
                 await channel.send(str)
 

@@ -23,6 +23,7 @@ def loop(discobot_cmd_queue, mumbot_cmd_queue):
             mumbot_cmd_queue.put_nowait(cmd)
         else:
             print("Unknown command %s" % cmd)
+            print("Supported commands are: quit, status")
 
 def main():
     parser = argparse.ArgumentParser(description="Run discord bot")
