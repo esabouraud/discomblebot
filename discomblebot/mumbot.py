@@ -1,4 +1,3 @@
-import time
 import pymumble_py3
 from pymumble_py3.constants import PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED
 
@@ -18,14 +17,14 @@ class MumbleBot:
 
     def loop(self):
         while self.mumble.is_alive():
-            str = self.cmd_queue.get()
-            if str == "quit":
-                print("Mumble bot stopping on command: %s" % str)
+            cmd_msg = self.cmd_queue.get()
+            if cmd_msg == "quit":
+                print("Mumble bot stopping on command: %s" % cmd_msg)
                 break
-            elif str == "status":
+            elif cmd_msg == "status":
                 self.status()
             else:
-                print("Mumble bot unknown command: %s" % str)
+                print("Mumble bot unknown command: %s" % cmd_msg)
 
     def status(self):
         #print(self.mumble.users)
@@ -45,7 +44,7 @@ class MumbleBot:
         """A user is connected on the server.  Create the specific structure with the local informations"""
         print(user)
         self.comm_queue.put("User %s joined the Mumble server" % user['name'])
-            
+
     def user_removed_cb(self, user, *args):
         """a user has disconnected"""
         print(user)

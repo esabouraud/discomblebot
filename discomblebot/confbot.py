@@ -2,7 +2,7 @@ import configparser
 from collections import namedtuple
 
 DISCORD_SECTION = "discord"
-MUMBLE_SECTION= "mumble"
+MUMBLE_SECTION = "mumble"
 DiscordConf = namedtuple("DiscordConf", ["token", "channel"])
 MumbleConf = namedtuple("MumbleConf", ["server", "port", "nickname", "password"])
 
