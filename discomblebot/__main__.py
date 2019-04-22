@@ -26,11 +26,12 @@ def loop(discobot_cmd_queue, mumbot_cmd_queue):
             print("Supported commands are: quit, status")
 
 def main():
-    parser = argparse.ArgumentParser(description="Run discord bot")
-    parser.add_argument("-f", "--file", dest="conf_file", default=None, help="Discord access token")
+    parser = argparse.ArgumentParser(prog="discomblebot", description="Run discord and mumble bots.")
+    parser.add_argument("-f", "--file", dest="conf_file", default=None, help="Configuration file path")
+    parser.add_argument('--version', action='version', version='%(prog)s 0.1.0')
     debug_options = parser.add_argument_group("Debug options")
-    debug_options.add_argument("--debug-discord", dest="debug_discord", action="store_true", default=False, help="Debug Discord bot")
-    debug_options.add_argument("--debug-mumble", dest="debug_mumble", action="store_true", default=False, help="Debug Mumble bot")
+    debug_options.add_argument("--debug-discord", dest="debug_discord", action="store_true", default=False, help="Debug Discord bot (broken)")
+    debug_options.add_argument("--debug-mumble", dest="debug_mumble", action="store_true", default=False, help="Debug Mumble bot (broken)")
     options = parser.parse_args()
 
     if not options.conf_file:
