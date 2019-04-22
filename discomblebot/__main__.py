@@ -1,29 +1,9 @@
 import argparse
-import threading
+from multiprocessing import Process, Queue
 
 from discomblebot import confbot
 from discomblebot import discobot
 from discomblebot import mumbot
-
-class DiscoThread(threading.Thread):
-    def __init__(self, discord_config):
-        threading.Thread.__init__(self)
-        self.token = discord_config.token
-
-    def run(self):
-        discobot.run(self.token)
-
-
-class MumbThread(threading.Thread):
-    def __init__(self, mumble_config):
-        threading.Thread.__init__(self)
-        self.server = mumble_config.server
-        self.port = mumble_config.port
-        self.nickname = mumble_config.nickname
-        self.password = mumble_config.password
-
-    def run(self):
-        mumbot.run(self.server, self.port, self.nickname, self.password)
 
 
 def main():
@@ -40,18 +20,22 @@ def main():
         parser.error("Cannot debug both bots simultaneously")
 
     discord_config, mumble_config = confbot.load_configuration(options.conf_file)
+    q = Queue()
     if options.debug_discord:
-        discobot.run(discord_config.token)
-    elif options.debug_mumble:
-        mumbot.run(mumble_config.server, mumble_config.port, mumble_config.nickname, mumble_config.password)
+        discobot.run(q, discord_config)
     else:
-        dbt = DiscoThread(discord_config)
-        mbt = MumbThread(mumble_config)
-        dbt.start()
-        mbt.start()
-        print("bleigh")
-        dbt.join()
-        mbt.join()
+        dbp = Process(target=discobot.run, args=(q, discord_config))
+        dbp.start()
+    if options.debug_mumble:
+        mumbot.run(q, mumble_config)
+    else:
+        mbp = Process(target=mumbot.run, args=(q, mumble_config))
+        mbp.start()
+    print("bleigh")
+    if not options.debug_discord:
+        dbp.join()
+    if not options.debug_mumble:
+        mbp.join()
 
 
 if __name__ == "__main__":
