@@ -1,10 +1,15 @@
 import asyncio
 import concurrent.futures
 import discord
+import re
 
 client = discord.Client()
 channel_id = None
 channel = None
+
+CMDE_RX = re.compile("^\\$([^\\s]+).*$")
+otherbot_cmd_queue = None
+
 
 @client.event
 async def on_ready():
@@ -18,8 +23,16 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.startswith("$hello"):
-        await message.channel.send("Hello!")
+    if message.content.startswith("$"):
+        match_cmd = CMDE_RX.match(message.content)
+        if match_cmd:
+            cmd = match_cmd.group(1)
+            if cmd == "hello":
+                await message.channel.send("Hello %s!" % message.author)
+            elif cmd == "status":
+                otherbot_cmd_queue.put_nowait("status")
+            else:
+                await message.channel.send("I do not understand this command.")
 
 async def read_comm_queue(comm_queue):
     global channel
@@ -44,8 +57,10 @@ async def read_cmd_queue(cmd_queue):
             else:
                 print("Discord bot unknown command: %s" % cmd_msg)
 
-def run(comm_queue, cmd_queue, config):
+def run(comm_queue, cmd_queue, mumbot_cmd_queue, config):
     global channel_id
+    global otherbot_cmd_queue
+    otherbot_cmd_queue = mumbot_cmd_queue
     channel_id = int(config.channel)
     client.loop.create_task(read_comm_queue(comm_queue))
     client.loop.create_task(read_cmd_queue(cmd_queue))

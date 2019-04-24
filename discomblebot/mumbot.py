@@ -5,7 +5,7 @@ class MumbleBot:
     def __init__(self, comm_queue, cmd_queue, server, port, nickname, password):
         self.comm_queue = comm_queue
         self.cmd_queue = cmd_queue
-        self.mumble = pymumble_py3.Mumble(server, nickname, int(port), password)
+        self.mumble = pymumble_py3.Mumble(server, nickname, int(port), password, reconnect=True)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, self.connected_cb)
 
 
