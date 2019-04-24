@@ -28,6 +28,7 @@ def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
 def main():
     parser = argparse.ArgumentParser(prog="discomblebot", description="Run discord and mumble bots.")
     parser.add_argument("-f", "--file", dest="conf_file", default=None, help="Configuration file path")
+    parser.add_argument("-e", "--environment", dest="environment", action="store_true", default=False, help="Load configuration from DISCOMBLE_CONF environment variable")
     parser.add_argument("-i", "--interactive", dest="interactive", action="store_true", default=False, help="Enable interactive mode")
     parser.add_argument('--version', action='version', version='%(prog)s 0.1.0')
     debug_options = parser.add_argument_group("Debug options")
@@ -35,13 +36,18 @@ def main():
     debug_options.add_argument("--debug-mumble", dest="debug_mumble", action="store_true", default=False, help="Debug Mumble bot (broken)")
     options = parser.parse_args()
 
-    if not options.conf_file:
-        parser.error("Missing mandatory configuration file")
+    if options.environment:
+        if options.conf_file:
+            parser.error("Configuration cannot be read from both file and environment")
+    else:
+        if not options.conf_file:
+            parser.error("Missing configuration file")
     if options.debug_discord and options.debug_mumble:
         parser.error("Cannot debug both bots simultaneously")
 
     print("discomblebot start")
-    discord_config, mumble_config = confbot.load_configuration(options.conf_file)
+    discord_config, mumble_config = confbot.load_configuration(options.conf_file, options.environment)
+
     bot_comm_queue = Queue()
     discobot_cmd_queue = Queue()
     mumbot_cmd_queue = Queue()
