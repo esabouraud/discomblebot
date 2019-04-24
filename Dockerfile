@@ -1,9 +1,7 @@
-FROM python:3
+FROM python:3-alpine
 
-RUN apt-get update \
-    && apt-get install -y \
-        libopus0 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --update --no-cache opus opus-dev binutils git \
+	&& rm -rf /var/cache/apk/*
 
 COPY requirements.txt discomblebot/
 
