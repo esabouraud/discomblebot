@@ -40,7 +40,7 @@ def main():
     if options.debug_discord and options.debug_mumble:
         parser.error("Cannot debug both bots simultaneously")
 
-    print("Staring discomblebot")
+    print("discomblebot start")
     discord_config, mumble_config = confbot.load_configuration(options.conf_file)
     bot_comm_queue = Queue()
     discobot_cmd_queue = Queue()
@@ -50,27 +50,29 @@ def main():
     mbp = Process(target=mumbot.run, args=(bot_comm_queue, mumbot_cmd_queue, mumble_config))
     mbp.start()
 
-    try:
-        if options.interactive:
+    if options.interactive:
+        try:
             interactive_loop(discobot_cmd_queue, mumbot_cmd_queue)
-        else:
-            while True:
-                time.sleep(60)
-    except KeyboardInterrupt:
-        print("Terminating discomblebot")
+        except KeyboardInterrupt:
+            print("Terminating discomblebot")
 
-    #Give bots a chance to exit gracefully
-    discobot_cmd_queue.put_nowait("quit")
-    mumbot_cmd_queue.put_nowait("quit")
+        #Give bots a chance to exit gracefully
+        discobot_cmd_queue.put_nowait("quit")
+        mumbot_cmd_queue.put_nowait("quit")
 
-    dbp.join(5)
-    if dbp.is_alive():
-        print("Force Discord bot exit")
-        dbp.terminate()
-    mbp.join(5)
-    if mbp.is_alive():
-        print("Force Mumble bot exit")
-        mbp.terminate()
+        dbp.join(5)
+        if dbp.is_alive():
+            print("Force Discord bot exit")
+            dbp.terminate()
+        mbp.join(5)
+        if mbp.is_alive():
+            print("Force Mumble bot exit")
+            mbp.terminate()
+    else:
+        dbp.join()
+        mbp.join()
+
+    print("discomblebot end")
 
 
 if __name__ == "__main__":
