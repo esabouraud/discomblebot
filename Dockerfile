@@ -14,4 +14,4 @@ ENV PYTHONPATH=/pymumble:/discomblebot
 
 ENTRYPOINT ["python", "-m", "discomblebot"]
 
-CMD ["-h"]
+CMD ["-e"]
