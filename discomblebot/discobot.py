@@ -1,7 +1,11 @@
+"""Discord bot, executes commands and writes messages coming from Mumble bot."""
+
 import asyncio
 import concurrent.futures
-import discord
 import re
+import discord
+
+from discomblebot import confbot
 
 client = discord.Client()
 channel_id = None
@@ -13,6 +17,7 @@ otherbot_cmd_queue = None
 
 @client.event
 async def on_ready():
+    """Finalize bot connection to Discord"""
     global channel
     print("We have logged in as {0.user}".format(client))
     channel = client.get_channel(channel_id)
@@ -20,6 +25,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    """Handle user commands sent in Discord"""
     if message.author == client.user:
         return
 
@@ -29,12 +35,16 @@ async def on_message(message):
             cmd = match_cmd.group(1)
             if cmd == "hello":
                 await message.channel.send("Hello %s!" % message.author)
+            elif cmd == "version":
+                await message.channel.send("Current version: %s" % confbot.VERSION)
             elif cmd == "status":
                 otherbot_cmd_queue.put_nowait("status")
             else:
                 await message.channel.send("I do not understand this command.")
 
 async def read_comm_queue(comm_queue):
+    """Read Mumble-bot issued messages from queue.
+    Read doperation is blocking, so run in a dedicated executor."""
     global channel
     while channel is None:
         await asyncio.sleep(1)
@@ -46,6 +56,8 @@ async def read_comm_queue(comm_queue):
                 await channel.send(mumble_msg)
 
 async def read_cmd_queue(cmd_queue):
+    """Read commands from queue.
+    Read doperation is blocking, so run in a dedicated executor."""
     while True:
         with concurrent.futures.ThreadPoolExecutor() as pool:
             cmd_msg = await client.loop.run_in_executor(pool, cmd_queue.get)
@@ -58,6 +70,7 @@ async def read_cmd_queue(cmd_queue):
                 print("Discord bot unknown command: %s" % cmd_msg)
 
 def run(comm_queue, cmd_queue, mumbot_cmd_queue, config):
+    """Launch Discord bot"""
     global channel_id
     global otherbot_cmd_queue
     otherbot_cmd_queue = mumbot_cmd_queue
