@@ -5,6 +5,8 @@ import concurrent.futures
 import re
 import discord
 
+from discomblebot import confbot
+
 client = discord.Client()
 channel_id = None
 channel = None
@@ -33,6 +35,8 @@ async def on_message(message):
             cmd = match_cmd.group(1)
             if cmd == "hello":
                 await message.channel.send("Hello %s!" % message.author)
+            elif cmd == "version":
+                await message.channel.send("Current version: %s" % confbot.VERSION)
             elif cmd == "status":
                 otherbot_cmd_queue.put_nowait("status")
             else:

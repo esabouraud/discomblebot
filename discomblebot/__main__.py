@@ -41,7 +41,7 @@ def handle_options():
         "-i", "--interactive", dest="interactive", action="store_true", default=False,
         help="Enable interactive mode")
     parser.add_argument(
-        "--version", action="version", version="%(prog)s 0.1.1")
+        "--version", action="version", version="discomblebot %s" % confbot.VERSION)
     debug_options = parser.add_argument_group("Debug options")
     debug_options.add_argument(
         "--debug-discord", dest="debug_discord", action="store_true", default=False,
