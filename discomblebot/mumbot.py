@@ -96,6 +96,8 @@ class MumbleBot:
         elif cmd == commonbot.VERSION_CMD:
             self.mumble.channels[my_channel_id].send_text_message(
                 "Current version: %s" % confbot.VERSION)
+        elif cmd == commonbot.HELP_CMD:
+            self.mumble.channels[my_channel_id].send_text_message(commonbot.get_help_message())
         elif cmd == commonbot.STATUS_CMD:
             self.otherbot_comm_queue.put("!status")
         else:
