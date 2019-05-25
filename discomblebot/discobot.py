@@ -6,12 +6,13 @@ import re
 import discord
 
 from discomblebot import confbot
+from discomblebot import commonbot
 
 client = discord.Client()
 channel_id = None
 channel = None
 
-CMDE_RX = re.compile("^\\$([^\\s]+).*$")
+otherbot_comm_queue = None
 otherbot_cmd_queue = None
 
 
@@ -28,23 +29,21 @@ async def on_message(message):
     """Handle user commands sent in Discord"""
     if message.author == client.user:
         return
-
-    if message.content.startswith("$"):
-        match_cmd = CMDE_RX.match(message.content)
-        if match_cmd:
-            cmd = match_cmd.group(1)
-            if cmd == "hello":
-                await message.channel.send("Hello %s!" % message.author)
-            elif cmd == "version":
-                await message.channel.send("Current version: %s" % confbot.VERSION)
-            elif cmd == "status":
-                otherbot_cmd_queue.put_nowait("status")
-            else:
-                await message.channel.send("I do not understand this command.")
+    cmd = commonbot.parse_message(message.content)
+    if cmd is None:
+        return
+    if cmd == commonbot.HELLO_CMD:
+        await message.channel.send("Hello %s!" % message.author)
+    elif cmd == commonbot.VERSION_CMD:
+        await message.channel.send("Current version: %s" % confbot.VERSION)
+    elif cmd == commonbot.STATUS_CMD:
+        otherbot_cmd_queue.put_nowait("status")
+    else:
+        await message.channel.send("I do not understand this command.")
 
 async def read_comm_queue(comm_queue):
     """Read Mumble-bot issued messages from queue.
-    Read doperation is blocking, so run in a dedicated executor."""
+    Read operation is blocking, so run in a dedicated executor."""
     global channel
     while channel is None:
         await asyncio.sleep(1)
@@ -66,13 +65,17 @@ async def read_cmd_queue(cmd_queue):
                 # Does not seem to make client.run() stop
                 await client.close()
                 break
+            elif cmd_msg == "status":
+                print("TBD status")
             else:
                 print("Discord bot unknown command: %s" % cmd_msg)
 
-def run(comm_queue, cmd_queue, mumbot_cmd_queue, config):
+def run(comm_queue, cmd_queue, mumbot_comm_queue, mumbot_cmd_queue, config):
     """Launch Discord bot"""
     global channel_id
+    global otherbot_comm_queue
     global otherbot_cmd_queue
+    otherbot_comm_queue = mumbot_comm_queue
     otherbot_cmd_queue = mumbot_cmd_queue
     channel_id = int(config.channel)
     client.loop.create_task(read_comm_queue(comm_queue))

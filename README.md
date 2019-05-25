@@ -25,13 +25,12 @@ A 32-bit version of Python 3 is required. pymumble depends on opuslib which in t
 Thus, some tinkering is necessary to make pymumble work on Windows.
 ```
 git clone https://github.com/azlux/pymumble.git
-py -3-32 -m pip install -U -r pymumble/requirements.txt
 git clone https://github.com/esabouraud/opuslib.git -b windows
-set PYTHONPATH=%cd%\pymumble;%cd%\opuslib
 git clone https://github.com/esabouraud/discomblebot.git
+py -3-32 -m pip install -U -r pymumble/requirements.txt discomblebot/requirements.txt
+set PYTHONPATH=%cd%\pymumble;%cd%\opuslib
+set PATH=%PATH%;%cd%\discomblebot\libs
 cd discomblebot
-PATH=%PATH%;%cd%\discomblebot\libs
-py -3-32 pip install -U -r requirements.txt
 ```
 Download [libopus](https://archive.mozilla.org/pub/opus/win32/opusfile-v0.9-win32.zip) and unzip into discomblebot/libs.
 
@@ -41,3 +40,8 @@ Copy conf/discomble.conf.sample into conf/discomble.conf and fill in the paramet
 python -m discomblebot -f conf/discomble.conf
 ```
 Type `quit` + Enter or `Ctrl-C` to exit.
+
+## Todo
+- Refactor message queues so that discord/mumble bots have symmetrical I/O
+- Implement text commands in Mumble bot
+- Monitor Discord voice connections and output status in Mumble text chat
