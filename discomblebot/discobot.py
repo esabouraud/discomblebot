@@ -1,4 +1,7 @@
-"""Discord bot, executes commands and writes messages coming from Mumble bot."""
+"""Discord bot
+  - executes CLI commands and responds to chat commands
+  - sends messages to be written on Mumble
+  - displays messages coming from Mumble bot."""
 
 import asyncio
 import concurrent.futures
@@ -25,7 +28,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    """Handle user commands sent in Discord"""
+    """Handle chat user commands sent in Discord"""
     if message.author == client.user:
         return
     cmd = commonbot.parse_message(message.content)
@@ -41,7 +44,7 @@ async def on_message(message):
         await message.channel.send("I do not understand this command.")
 
 async def read_comm_queue(comm_queue):
-    """Read Mumble-bot issued messages from queue.
+    """Read queue expecting Mumble-bot issued messages or CLI commands (start with !).
     Read operation is blocking, so run in a dedicated executor."""
     global channel
     while channel is None:
@@ -74,7 +77,11 @@ async def read_comm_queue(comm_queue):
 
 
 def run(comm_queue, mumbot_comm_queue, config):
-    """Launch Discord bot"""
+    """Launch Discord bot
+    comm_queue is used to receive CLI commands and messages from Mumble bot
+    mumbot_comm_queue is used to send messages to Mumble bot
+    config contains the server parameters"""
+
     global channel_id
     global otherbot_comm_queue
     otherbot_comm_queue = mumbot_comm_queue

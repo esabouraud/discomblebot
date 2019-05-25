@@ -42,6 +42,5 @@ python -m discomblebot -f conf/discomble.conf
 Type `quit` + Enter or `Ctrl-C` to exit.
 
 ## Todo
-- Refactor message queues so that discord/mumble bots have symmetrical I/O
-- Implement text commands in Mumble bot
 - Monitor Discord voice connections and output status in Mumble text chat
+- Add invite chat commands to both bots 

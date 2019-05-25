@@ -1,4 +1,7 @@
-"""Mumble bot, monitors actity and sends messages to be written on Discord"""
+"""Mumble bot
+  - executes CLI commands and responds to chat commands
+  - monitors actity and sends messages to be written on Discord
+  - displays messages coming from Discord bot."""
 
 import pymumble_py3
 from pymumble_py3.constants import (
@@ -10,8 +13,8 @@ from discomblebot import commonbot
 
 class MumbleBot:
     """Mumble bot management
-    comm_queue is used to send message to Discord bot
-    cmd_queue is used to receive commands
+    comm_queue is used to receive CLI commands and messages from Discord bot
+    otherbot_comm_queue is used to send messages to Discord bot
     config contains the server parameters"""
 
     def __init__(self, comm_queue, otherbot_comm_queue, config):
