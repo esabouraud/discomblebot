@@ -14,11 +14,9 @@ class MumbleBot:
     cmd_queue is used to receive commands
     config contains the server parameters"""
 
-    def __init__(self, comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config):
+    def __init__(self, comm_queue, otherbot_comm_queue, config):
         self.comm_queue = comm_queue
-        self.cmd_queue = cmd_queue
         self.otherbot_comm_queue = otherbot_comm_queue
-        self.otherbot_cmd_queue = otherbot_cmd_queue
         self.mumble = pymumble_py3.Mumble(
             config.server, config.nickname, int(config.port), config.password, reconnect=True)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, self.connected_cb)
@@ -32,14 +30,20 @@ class MumbleBot:
     def loop(self):
         """Main loop of the mumble bot"""
         while self.mumble.is_alive():
-            cmd_msg = self.cmd_queue.get()
-            if cmd_msg == "quit":
-                print("Mumble bot stopping on command: %s" % cmd_msg)
-                break
-            elif cmd_msg == "status":
-                self.status()
+            discord_msg = self.comm_queue.get()
+            if discord_msg.startswith("!"):
+                cmd_msg = discord_msg[1:]
+                if cmd_msg == "quit":
+                    print("Mumble bot stopping on command: %s" % cmd_msg)
+                    break
+                elif cmd_msg == "status":
+                    self.status()
+                else:
+                    print("Mumble bot unknown command: %s" % cmd_msg)
             else:
-                print("Mumble bot unknown command: %s" % cmd_msg)
+                print("Mumble bot read data from queue: %s" % discord_msg)
+                my_channel_id = self.mumble.users.myself['channel_id']
+                self.mumble.channels[my_channel_id].send_text_message(discord_msg)
 
     def status(self):
         """Respond to status command"""
@@ -51,6 +55,7 @@ class MumbleBot:
         self.otherbot_comm_queue.put(status_str)
 
     def connected_cb(self):
+
         """Wait until bot is connected before starting monitoring users"""
         print("Mumble bot connected")
         self.status()
@@ -80,14 +85,14 @@ class MumbleBot:
         elif cmd == commonbot.VERSION_CMD:
             self.mumble.channels[my_channel_id].send_text_message("Current version: %s" % confbot.VERSION)
         elif cmd == commonbot.STATUS_CMD:
-            self.otherbot_cmd_queue.put_nowait("status")
+            self.otherbot_comm_queue.put("!status")
         else:
             message.channel.send("I do not understand this command.")
 
 
-def run(comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config):
+def run(comm_queue, otherbot_comm_queue, config):
     """Launch Mumble bot"""
-    bot = MumbleBot(comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config)
+    bot = MumbleBot(comm_queue, otherbot_comm_queue, config)
     try:
         bot.loop()
     except KeyboardInterrupt:
