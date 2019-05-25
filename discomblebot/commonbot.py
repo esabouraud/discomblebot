@@ -9,7 +9,7 @@ STATUS_CMD = "status"
 # Display program version
 VERSION_CMD = "version"
 # Regexp matching supported commands
-CMDE_RX = re.compile("^\\$(%s|%s|%s)(?:\\s.*)?$" % (HELLO_CMD, STATUS_CMD, VERSION_CMD) )
+CMDE_RX = re.compile("^\\$(%s|%s|%s)(?:\\s.*)?$" % (HELLO_CMD, STATUS_CMD, VERSION_CMD))
 
 
 def parse_message(message):
@@ -18,6 +18,5 @@ def parse_message(message):
         match_cmd = CMDE_RX.match(message)
         if match_cmd:
             return match_cmd.group(1)
-        else:
-            return "unknown"
+        return "unknown"
     return None

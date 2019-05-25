@@ -5,7 +5,6 @@
 
 import asyncio
 import concurrent.futures
-import re
 import discord
 
 from discomblebot import confbot
@@ -14,7 +13,6 @@ from discomblebot import commonbot
 client = discord.Client()
 channel_id = None
 channel = None
-
 otherbot_comm_queue = None
 
 
@@ -56,7 +54,9 @@ async def on_voice_state_update(member, before, after):
 
 async def status():
     """Respond to status command"""
-    voice_channels = [channel for channel in client.get_all_channels() if isinstance(channel, discord.VoiceChannel)]
+    voice_channels = [
+        channel for channel in client.get_all_channels()
+        if isinstance(channel, discord.VoiceChannel)]
     voice_members = [member.name for channel in voice_channels for member in channel.members]
     status_str = "%d users (%s) are connected on the Discord server" % (
         len(voice_members),

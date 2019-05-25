@@ -34,7 +34,7 @@ class MumbleBot:
             try:
                 channel = self.mumble.channels.find_by_name(self.channel)
                 channel.move_in()
-            except Exception:
+            except pymumble_py3.errors.UnknownChannelError:
                 print("Mumble channel not found: %s" % self.channel)
 
     def loop(self):
@@ -94,7 +94,8 @@ class MumbleBot:
         if cmd == commonbot.HELLO_CMD:
             self.mumble.channels[my_channel_id].send_text_message("Hello !")
         elif cmd == commonbot.VERSION_CMD:
-            self.mumble.channels[my_channel_id].send_text_message("Current version: %s" % confbot.VERSION)
+            self.mumble.channels[my_channel_id].send_text_message(
+                "Current version: %s" % confbot.VERSION)
         elif cmd == commonbot.STATUS_CMD:
             self.otherbot_comm_queue.put("!status")
         else:
