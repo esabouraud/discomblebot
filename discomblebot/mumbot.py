@@ -17,15 +17,22 @@ class MumbleBot:
     def __init__(self, comm_queue, otherbot_comm_queue, config):
         self.comm_queue = comm_queue
         self.otherbot_comm_queue = otherbot_comm_queue
+        self.channel = config.channel
         self.mumble = pymumble_py3.Mumble(
             config.server, config.nickname, int(config.port), config.password, reconnect=True)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, self.connected_cb)
-
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the end of the connection process
         # mute and deafen the user (just to make clear he don't speak or listen)
         self.mumble.users.myself.mute()
         self.mumble.users.myself.deafen()
+        # join output channel
+        if self.channel:
+            try:
+                channel = self.mumble.channels.find_by_name(self.channel)
+                channel.move_in()
+            except Exception:
+                print("Mumble channel not found: %s" % self.channel)
 
     def loop(self):
         """Main loop of the mumble bot"""
@@ -55,10 +62,11 @@ class MumbleBot:
         self.otherbot_comm_queue.put(status_str)
 
     def connected_cb(self):
-
         """Wait until bot is connected before starting monitoring users"""
         print("Mumble bot connected")
+        # Do first status update
         self.status()
+        # Start monitoring users and messages
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_USERCREATED, self.user_created_cb)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_USERREMOVED, self.user_removed_cb)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, self.msg_received_cb)
