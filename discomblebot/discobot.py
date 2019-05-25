@@ -1,6 +1,6 @@
 """Discord bot
   - executes CLI commands and responds to chat commands
-  - sends messages to be written on Mumble
+  - monitors actity and sends messages to be written on Mumble
   - displays messages coming from Mumble bot."""
 
 import asyncio
