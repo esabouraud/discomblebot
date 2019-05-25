@@ -10,8 +10,8 @@ CMDE_RX = re.compile("^\\$(%s|%s|%s)(?:\\s.*)?$" % (HELLO_CMD, STATUS_CMD, VERSI
 
 def parse_message(message):
     """Handle user commands sent in chat"""
-    if message.content.startswith("$"):
-        match_cmd = CMDE_RX.match(message.content)
+    if message.startswith("$"):
+        match_cmd = CMDE_RX.match(message)
         if match_cmd:
             return match_cmd.group(1)
         else:

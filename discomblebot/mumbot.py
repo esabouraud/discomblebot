@@ -2,7 +2,11 @@
 
 import pymumble_py3
 from pymumble_py3.constants import (
-    PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED)
+    PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED,
+    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED)
+
+from discomblebot import confbot
+from discomblebot import commonbot
 
 class MumbleBot:
     """Mumble bot management
@@ -10,9 +14,11 @@ class MumbleBot:
     cmd_queue is used to receive commands
     config contains the server parameters"""
 
-    def __init__(self, comm_queue, cmd_queue, config):
+    def __init__(self, comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config):
         self.comm_queue = comm_queue
         self.cmd_queue = cmd_queue
+        self.otherbot_comm_queue = otherbot_comm_queue
+        self.otherbot_cmd_queue = otherbot_cmd_queue
         self.mumble = pymumble_py3.Mumble(
             config.server, config.nickname, int(config.port), config.password, reconnect=True)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, self.connected_cb)
@@ -42,7 +48,7 @@ class MumbleBot:
             self.mumble.users.count(),
             ", ".join([user['name'] for _userid, user in self.mumble.users.items()]))
         print(status_str)
-        self.comm_queue.put(status_str)
+        self.otherbot_comm_queue.put(status_str)
 
     def connected_cb(self):
         """Wait until bot is connected before starting monitoring users"""
@@ -50,20 +56,38 @@ class MumbleBot:
         self.status()
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_USERCREATED, self.user_created_cb)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_USERREMOVED, self.user_removed_cb)
+        self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, self.msg_received_cb)
 
     def user_created_cb(self, user):
         """A user is connected on the server."""
         print(user)
-        self.comm_queue.put("User %s joined the Mumble server" % user['name'])
+        self.otherbot_comm_queue.put("User %s joined the Mumble server" % user['name'])
 
     def user_removed_cb(self, user, *args):
         """A user has disconnected from the server."""
         print(user)
-        self.comm_queue.put("User %s left the Mumble server" % user['name'])
+        self.otherbot_comm_queue.put("User %s left the Mumble server" % user['name'])
 
-def run(comm_queue, cmd_queue, config):
+    def msg_received_cb(self, message):
+        """A text message has been received"""
+        print(message)
+        my_channel_id = self.mumble.users.myself['channel_id']
+        cmd = commonbot.parse_message(message.message)
+        if cmd is None:
+            return
+        if cmd == commonbot.HELLO_CMD:
+            self.mumble.channels[my_channel_id].send_text_message("Hello !")
+        elif cmd == commonbot.VERSION_CMD:
+            self.mumble.channels[my_channel_id].send_text_message("Current version: %s" % confbot.VERSION)
+        elif cmd == commonbot.STATUS_CMD:
+            self.otherbot_cmd_queue.put_nowait("status")
+        else:
+            message.channel.send("I do not understand this command.")
+
+
+def run(comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config):
     """Launch Mumble bot"""
-    bot = MumbleBot(comm_queue, cmd_queue, config)
+    bot = MumbleBot(comm_queue, cmd_queue, otherbot_comm_queue, otherbot_cmd_queue, config)
     try:
         bot.loop()
     except KeyboardInterrupt:

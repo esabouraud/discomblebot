@@ -71,21 +71,22 @@ def main():
     discord_config, mumble_config = confbot.load_configuration(
         options.conf_file, options.environment)
 
-    bot_comm_queue = Queue()
+    discobot_comm_queue = Queue()
     discobot_cmd_queue = Queue()
+    mumbot_comm_queue = Queue()
     mumbot_cmd_queue = Queue()
     if not options.debug_discord:
         dbp = Process(target=discobot.run, args=(
-            bot_comm_queue, discobot_cmd_queue, mumbot_cmd_queue, discord_config))
+            discobot_comm_queue, discobot_cmd_queue, mumbot_comm_queue, mumbot_cmd_queue, discord_config))
         dbp.start()
     if not options.debug_mumble:
         mbp = Process(target=mumbot.run, args=(
-            bot_comm_queue, mumbot_cmd_queue, mumble_config))
+            mumbot_comm_queue, mumbot_cmd_queue, discobot_comm_queue, discobot_cmd_queue, mumble_config))
         mbp.start()
     if options.debug_discord:
-        discobot.run(bot_comm_queue, discobot_cmd_queue, mumbot_cmd_queue, discord_config)
+        discobot.run(discobot_comm_queue, discobot_cmd_queue, mumbot_comm_queue, mumbot_cmd_queue, discord_config)
     if options.debug_mumble:
-        mumbot.run(bot_comm_queue, mumbot_cmd_queue, mumble_config)
+        mumbot.run(mumbot_comm_queue, mumbot_cmd_queue, discobot_comm_queue, discobot_cmd_queue, mumble_config)
 
     if options.interactive:
         try:
