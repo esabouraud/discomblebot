@@ -25,6 +25,7 @@ async def on_ready():
     print("We have logged in as {0.user}".format(client))
     channel = client.get_channel(channel_id)
     print("Output channel is '%s'" % channel)
+    await status()
 
 @client.event
 async def on_message(message):
@@ -42,6 +43,26 @@ async def on_message(message):
         otherbot_comm_queue.put_nowait("!status")
     else:
         await message.channel.send("I do not understand this command.")
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    """Monitor Discord voice join/leave activity"""
+    if member == client.user:
+        return
+    if before.channel is None and after.channel is not None:
+        otherbot_comm_queue.put_nowait("User %s enabled voice on the Discord server" % member.name)
+    elif before.channel is not None and after.channel is None:
+        otherbot_comm_queue.put_nowait("User %s disabled voice on the Discord server" % member.name)
+
+async def status():
+    """Respond to status command"""
+    voice_channels = [channel for channel in client.get_all_channels() if isinstance(channel, discord.VoiceChannel)]
+    voice_members = [member.name for channel in voice_channels for member in channel.members]
+    status_str = "%d users (%s) are connected on the Discord server" % (
+        len(voice_members),
+        ", ".join(voice_members))
+    print(status_str)
+    otherbot_comm_queue.put_nowait(status_str)
 
 async def read_comm_queue(comm_queue):
     """Read queue expecting Mumble-bot issued messages or CLI commands (start with !).
@@ -61,13 +82,7 @@ async def read_comm_queue(comm_queue):
                     break
                 elif cmd_msg == "status":
                     #print(client.users)
-                    voice_channels = [channel for channel in client.get_all_channels() if isinstance(channel, discord.VoiceChannel)]
-                    voice_members = [member.name for channel in voice_channels for member in channel.members]
-                    status_str = "%d users (%s) are connected on the Discord server" % (
-                        len(voice_members),
-                        ", ".join(voice_members))
-                    print(status_str)
-                    otherbot_comm_queue.put_nowait(status_str)
+                    await status()
                 else:
                     print("Discord bot unknown command: %s" % cmd_msg)
             else:
