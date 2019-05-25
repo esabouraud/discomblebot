@@ -6,12 +6,12 @@ import re
 import discord
 
 from discomblebot import confbot
+from discomblebot import commonbot
 
 client = discord.Client()
 channel_id = None
 channel = None
 
-CMDE_RX = re.compile("^\\$([^\\s]+).*$")
 otherbot_cmd_queue = None
 
 
@@ -28,19 +28,17 @@ async def on_message(message):
     """Handle user commands sent in Discord"""
     if message.author == client.user:
         return
-
-    if message.content.startswith("$"):
-        match_cmd = CMDE_RX.match(message.content)
-        if match_cmd:
-            cmd = match_cmd.group(1)
-            if cmd == "hello":
-                await message.channel.send("Hello %s!" % message.author)
-            elif cmd == "version":
-                await message.channel.send("Current version: %s" % confbot.VERSION)
-            elif cmd == "status":
-                otherbot_cmd_queue.put_nowait("status")
-            else:
-                await message.channel.send("I do not understand this command.")
+    cmd = commonbot.parse_message(message)
+    if cmd is None:
+        return
+    if cmd == commonbot.HELLO_CMD:
+        await message.channel.send("Hello %s!" % message.author)
+    elif cmd == commonbot.VERSION_CMD:
+        await message.channel.send("Current version: %s" % confbot.VERSION)
+    elif cmd == commonbot.STATUS_CMD:
+        otherbot_cmd_queue.put_nowait("status")
+    else:
+        await message.channel.send("I do not understand this command.")
 
 async def read_comm_queue(comm_queue):
     """Read Mumble-bot issued messages from queue.
