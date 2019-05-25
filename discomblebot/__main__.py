@@ -18,15 +18,15 @@ def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
         # handle bad KeyboardInterrupt/input() interactions (https://stackoverflow.com/a/31131378)
         except EOFError:
             time.sleep(1)
-        if cmd == "quit":
+        if cmd == "!quit":
             print("Quitting")
             break
-        elif cmd == "status":
+        elif cmd == "!status":
             discobot_cmd_queue.put_nowait(cmd)
             mumbot_cmd_queue.put_nowait(cmd)
         else:
             print("Unknown command %s" % cmd)
-            print("Supported commands are: quit, status")
+            print("Supported commands are: !quit, !status")
 
 def handle_options():
     """Read and check CLI options"""
@@ -71,31 +71,30 @@ def main():
     discord_config, mumble_config = confbot.load_configuration(
         options.conf_file, options.environment)
 
-    bot_comm_queue = Queue()
-    discobot_cmd_queue = Queue()
-    mumbot_cmd_queue = Queue()
+    discobot_comm_queue = Queue()
+    mumbot_comm_queue = Queue()
     if not options.debug_discord:
         dbp = Process(target=discobot.run, args=(
-            bot_comm_queue, discobot_cmd_queue, mumbot_cmd_queue, discord_config))
+            discobot_comm_queue, mumbot_comm_queue, discord_config))
         dbp.start()
     if not options.debug_mumble:
         mbp = Process(target=mumbot.run, args=(
-            bot_comm_queue, mumbot_cmd_queue, mumble_config))
+            mumbot_comm_queue, discobot_comm_queue, mumble_config))
         mbp.start()
     if options.debug_discord:
-        discobot.run(bot_comm_queue, discobot_cmd_queue, mumbot_cmd_queue, discord_config)
+        discobot.run(discobot_comm_queue, mumbot_comm_queue, discord_config)
     if options.debug_mumble:
-        mumbot.run(bot_comm_queue, mumbot_cmd_queue, mumble_config)
+        mumbot.run(mumbot_comm_queue, discobot_comm_queue, mumble_config)
 
     if options.interactive:
         try:
-            interactive_loop(discobot_cmd_queue, mumbot_cmd_queue)
+            interactive_loop(discobot_comm_queue, mumbot_comm_queue)
         except KeyboardInterrupt:
             print("Terminating discomblebot")
 
         #Give bots a chance to exit gracefully
-        discobot_cmd_queue.put_nowait("quit")
-        mumbot_cmd_queue.put_nowait("quit")
+        discobot_comm_queue.put_nowait("!quit")
+        mumbot_comm_queue.put_nowait("!quit")
 
         dbp.join(5)
         if dbp.is_alive():

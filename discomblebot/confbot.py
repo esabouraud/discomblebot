@@ -4,13 +4,13 @@ import os
 import configparser
 from collections import namedtuple
 
-VERSION = "0.1.2"
+VERSION = "0.2.0"
 
 CONF_ENV = "DISCOMBLE_CONF"
 DISCORD_SECTION = "discord"
 MUMBLE_SECTION = "mumble"
 DiscordConf = namedtuple("DiscordConf", ["token", "channel"])
-MumbleConf = namedtuple("MumbleConf", ["server", "port", "nickname", "password"])
+MumbleConf = namedtuple("MumbleConf", ["server", "port", "nickname", "password", "channel"])
 
 def load_configuration(path, environment):
     "Load configuration from INI file or environment variable"

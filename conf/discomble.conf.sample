@@ -1,9 +1,17 @@
 [discord]
+# Discord bot access token
 token=
+# Discord bot output channel
 channel=
 
 [mumble]
+# Mumble bot server hostname
 server=
+# Mumble bot server port
 port=
+# Mumble bot output channel
+channel=
+# Mumble bot nickname
 nickname=
+# Mumble bot or server password
 password=
