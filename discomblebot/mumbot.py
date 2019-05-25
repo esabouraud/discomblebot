@@ -92,7 +92,8 @@ class MumbleBot:
         if cmd is None:
             return
         if cmd == commonbot.HELLO_CMD:
-            self.mumble.channels[my_channel_id].send_text_message("Hello !")
+            self.mumble.channels[my_channel_id].send_text_message(
+                "Hello %s !" % self.mumble.users[message.actor]['name'])
         elif cmd == commonbot.VERSION_CMD:
             self.mumble.channels[my_channel_id].send_text_message(
                 "Current version: %s" % confbot.VERSION)

@@ -34,7 +34,7 @@ async def on_message(message):
     if cmd is None:
         return
     if cmd == commonbot.HELLO_CMD:
-        await message.channel.send("Hello %s!" % message.author)
+        await message.channel.send("Hello %s !" % message.author)
     elif cmd == commonbot.VERSION_CMD:
         await message.channel.send("Current version: %s" % confbot.VERSION)
     elif cmd == commonbot.HELP_CMD:
