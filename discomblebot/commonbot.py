@@ -12,29 +12,60 @@ STATUS_CMD = "status"
 VERSION_CMD = "version"
 # Invite user to other server
 INVITE_CMD = "invite"
-# All supported commands
-COMMANDS = [HELLO_CMD, HELP_CMD, STATUS_CMD, VERSION_CMD, INVITE_CMD]
+# All supported chat commands (start with $)
+CHAT_COMMANDS = [HELLO_CMD, HELP_CMD, STATUS_CMD, VERSION_CMD, INVITE_CMD]
 # Regexp matching supported commands
-CMD_RX = re.compile("^\\$(%s)(?:\\s.*)?$" % "|".join(COMMANDS))
-# Regexp matching a command, to extract a following parameter
-PARAM_RX = re.compile("^\\$.+\\s+([^\\s]+).*$")
+CHAT_CMD_RX = re.compile("^\\$(%s)(?:\\s.*)?$" % "|".join(CHAT_COMMANDS))
+# Regexp matching a command, to extract a following parameter (separator=whitespace)
+CHAT_PARAM_RX = re.compile("^\\$.+\\s+([^\\s]+).*$")
 
-def parse_message(message):
-    """Handle user commands sent in chat (start with $)"""
-    if message.startswith("$"):
-        match_cmd = CMD_RX.match(message)
+# Fetch current server status and send it to other bot
+STATUS_BOTCMD = "status"
+# Generate an invite and send it to the other bot
+INVITE_BOTCMD = "invite"
+# Send response to an invite command to the other bot
+INVITERSP_BOTCMD = "invitersp"
+# Stop the bot gracefully
+QUIT_BOTCMD = "quit"
+# All supported Bot/CLI commands (start with !)
+BOT_COMMANDS = [STATUS_BOTCMD, INVITE_BOTCMD, INVITERSP_BOTCMD, QUIT_BOTCMD]
+# Regexp matching supported commands
+BOTCMD_RX = re.compile("^!(%s)(?:\\|.*)?$" % "|".join(BOT_COMMANDS))
+# Regexp matching a command, to extract a following parameter (separator=|)
+BOTCMD_PARAM_RX = re.compile("^!.+\\|(.*)$")
+
+def parse_chat_message(message):
+    """Handle user commands sent in chat"""
+    return parse_command("$", CHAT_CMD_RX, message)
+
+def get_chat_cmd_param(message):
+    """Get single param from command message"""
+    return get_cmd_param(CHAT_PARAM_RX, message)
+
+def get_chat_help_message():
+    """Return inline help string"""
+    return "Available commands are: %s" % ", ".join(CHAT_COMMANDS)
+
+def parse_bot_command(message):
+    """Handle user or bot commands sent in queue"""
+    return parse_command("!", BOTCMD_RX, message)
+
+def get_bot_cmd_param(message):
+    """Get single param from command message"""
+    return get_cmd_param(BOTCMD_PARAM_RX, message)
+
+def parse_command(start_char, cmd_rx, message):
+    """Handle user or bot commands sent in queue or chat"""
+    if message.startswith(start_char):
+        match_cmd = cmd_rx.match(message)
         if match_cmd:
             return match_cmd.group(1)
         return "unknown"
     return None
 
-def get_cmd_param(message):
+def get_cmd_param(param_rx, message):
     """Get single param from command message"""
-    match_param = PARAM_RX.match(message)
+    match_param = param_rx.match(message)
     if match_param:
         return match_param.group(1)
     return None
-
-def get_help_message():
-    """Return inline help string"""
-    return "Available commands are: %s" % ", ".join(COMMANDS)

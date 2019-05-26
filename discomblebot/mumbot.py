@@ -41,13 +41,25 @@ class MumbleBot:
         """Main loop of the mumble bot"""
         while self.mumble.is_alive():
             discord_msg = self.comm_queue.get()
-            if discord_msg.startswith("!"):
-                cmd_msg = discord_msg[1:]
-                if cmd_msg == "quit":
+            cmd_msg = commonbot.parse_bot_command(discord_msg)
+            if cmd_msg:
+                if cmd_msg == commonbot.QUIT_BOTCMD:
                     print("Mumble bot stopping on command: %s" % cmd_msg)
                     break
-                elif cmd_msg == "status":
+                elif cmd_msg == commonbot.STATUS_BOTCMD:
                     self.status()
+                elif cmd_msg == commonbot.INVITE_BOTCMD:
+                    # FIXME: TBD
+                    print("TBD")
+                elif cmd_msg == commonbot.INVITERSP_BOTCMD:
+                    param_msg = commonbot.get_bot_cmd_param(discord_msg)
+                    params = param_msg.split(";", 1)
+                    user_id = params[0]
+                    invite_url = params[1]
+                    print("Mumble bot receiving invite for %s" % user_id)
+                    self.mumble.users[int(user_id)].send_text_message(
+                        "You have been invited to a Discord server: <a href=\"%s\">%s</a>" % (
+                            invite_url, invite_url))
                 else:
                     print("Mumble bot unknown command: %s" % cmd_msg)
             else:
@@ -88,7 +100,7 @@ class MumbleBot:
         """A text message has been received"""
         print(message)
         my_channel_id = self.mumble.users.myself['channel_id']
-        cmd = commonbot.parse_message(message.message)
+        cmd = commonbot.parse_chat_message(message.message)
         if cmd is None:
             return
         if cmd == commonbot.HELLO_CMD:
@@ -98,9 +110,18 @@ class MumbleBot:
             self.mumble.channels[my_channel_id].send_text_message(
                 "Current version: %s" % confbot.VERSION)
         elif cmd == commonbot.HELP_CMD:
-            self.mumble.channels[my_channel_id].send_text_message(commonbot.get_help_message())
+            self.mumble.channels[my_channel_id].send_text_message(commonbot.get_chat_help_message())
         elif cmd == commonbot.STATUS_CMD:
-            self.otherbot_comm_queue.put("!status")
+            self.otherbot_comm_queue.put("!%s" % commonbot.STATUS_BOTCMD)
+        elif cmd == commonbot.INVITE_CMD:
+            recipient = commonbot.get_chat_cmd_param(message.message)
+            print("Mumble bot requesting invite for %s" % recipient)
+            usersdict = {user['name']: userid for userid, user in self.mumble.users.items()}
+            if recipient in usersdict:
+                self.otherbot_comm_queue.put("!%s|%d" % (
+                    commonbot.INVITE_BOTCMD, usersdict[recipient]))
+            else:
+                print("Mumble bot failed to find user %s" % recipient)
         else:
             message.channel.send("I do not understand this command.")
 
