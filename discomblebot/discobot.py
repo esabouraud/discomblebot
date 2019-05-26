@@ -44,7 +44,7 @@ async def on_message(message):
     elif cmd == commonbot.INVITE_CMD:
         sender = message.author
         recipient = commonbot.get_chat_cmd_param(message.content)
-        await invite(sender, recipient)
+        await invite(commonbot.INVITE_BOTCMD, sender, recipient)
     else:
         await message.channel.send("I do not understand this command.")
 
@@ -70,13 +70,14 @@ async def status():
     print(status_str)
     otherbot_comm_queue.put_nowait(status_str)
 
-async def invite(sender, recipient):
-     # Invites are channel-level, not guild-level, oddly enough
-    invite = await channel.create_invite(
-        max_uses=1, unique=True, reason="discomble")
-    print(invite)
+async def invite(cmd, sender, recipient):
+    """"""
+    # Invites are channel-level, not guild-level, oddly enough
+    channel_invite = await channel.create_invite(
+        max_age=86400, max_uses=1, unique=True, reason="discomble")
+    print(channel_invite)
     otherbot_comm_queue.put_nowait(
-        "!%s|%s;%s;%s" % (commonbot.INVITERSP_BOTCMD, sender, recipient, invite.url))
+        "!%s|%s;%s;%s" % (cmd, sender, recipient, channel_invite.url))
 
 async def read_comm_queue(comm_queue):
     """Read queue expecting Mumble-bot issued messages or CLI commands (start with !).
@@ -100,10 +101,17 @@ async def read_comm_queue(comm_queue):
                 elif cmd_msg == commonbot.INVITE_BOTCMD:
                     param_msg = commonbot.get_bot_cmd_param(mumble_msg)
                     params = param_msg.split(";", 1)
-                    await invite(params[0], params[1])
+                    await invite(commonbot.INVITERSP_BOTCMD, params[0], params[1])
                 elif cmd_msg == commonbot.INVITERSP_BOTCMD:
-                    # FIXME: TBD
-                    print("TBD")
+                    param_msg = commonbot.get_bot_cmd_param(mumble_msg)
+                    params = param_msg.split(";", 1)
+                    sender = params[0]
+                    invite_response = params[1]
+                    usersdict = {str(user): user for user in client.users}
+                    if sender in usersdict:
+                        await usersdict[sender].send(invite_response)
+                    else:
+                        print("User %s not found" % sender)
                 else:
                     print("Discord bot unknown command: %s" % cmd_msg)
             else:
