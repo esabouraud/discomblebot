@@ -42,8 +42,9 @@ async def on_message(message):
     elif cmd == commonbot.STATUS_CMD:
         otherbot_comm_queue.put_nowait("!status")
     elif cmd == commonbot.INVITE_CMD:
-        # FIXME: TBD
-        print("TBD")
+        sender = message.author
+        recipient = commonbot.get_chat_cmd_param(message.content)
+        await invite(sender, recipient)
     else:
         await message.channel.send("I do not understand this command.")
 
@@ -69,6 +70,14 @@ async def status():
     print(status_str)
     otherbot_comm_queue.put_nowait(status_str)
 
+async def invite(sender, recipient):
+     # Invites are channel-level, not guild-level, oddly enough
+    invite = await channel.create_invite(
+        max_uses=1, unique=True, reason="discomble")
+    print(invite)
+    otherbot_comm_queue.put_nowait(
+        "!%s|%s;%s;%s" % (commonbot.INVITERSP_BOTCMD, sender, recipient, invite.url))
+
 async def read_comm_queue(comm_queue):
     """Read queue expecting Mumble-bot issued messages or CLI commands (start with !).
     Read operation is blocking, so run in a dedicated executor."""
@@ -89,13 +98,9 @@ async def read_comm_queue(comm_queue):
                     #print(client.users)
                     await status()
                 elif cmd_msg == commonbot.INVITE_BOTCMD:
-                    # Invites are channel-level, not guild-level, oddly enough
-                    invite = await channel.create_invite(
-                        max_uses=1, unique=True, reason="discomble")
-                    print(invite)
                     param_msg = commonbot.get_bot_cmd_param(mumble_msg)
-                    otherbot_comm_queue.put_nowait(
-                        "!%s|%s;%s" % (commonbot.INVITERSP_BOTCMD, param_msg, invite.url))
+                    params = param_msg.split(";", 1)
+                    await invite(params[0], params[1])
                 elif cmd_msg == commonbot.INVITERSP_BOTCMD:
                     # FIXME: TBD
                     print("TBD")

@@ -6,7 +6,7 @@
 import pymumble_py3
 from pymumble_py3.constants import (
     PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED,
-    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, PYMUMBLE_CMD_TEXTMESSAGE, PYMUMBLE_CMD_TEXTPRIVATEMESSAGE)
+    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED)
 
 from discomblebot import confbot
 from discomblebot import commonbot
@@ -64,6 +64,7 @@ class MumbleBot:
                         self.mumble.users[usersdict[recipient_name]].send_text_message(
                             "%s has invited you to a Discord server: <a href=\"%s\">%s</a>" % (
                                 sender_name, invite_url, invite_url))
+                    if sender_name in usersdict:
                         self.mumble.users[usersdict[sender_name]].send_text_message(
                             "%s has been invited to Discord." % (recipient_name))
                 else:
@@ -110,7 +111,7 @@ class MumbleBot:
             output_channel = self.mumble.channels[message.channel_id[0]]
         # ... Or private message depending on message source
         elif message.session:
-            output_channel =  self.mumble.users[message.actor]
+            output_channel = self.mumble.users[message.actor]
         else:
             print("Mumble bot cannot identify output channel")
             return
