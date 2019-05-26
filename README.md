@@ -58,4 +58,3 @@ docker run -d -e DISCOMBLE_CONF=$(<conf/discomble.conf) discomblebot
 ```
 
 ## Todo
-- Add invite chat commands to both bots 
