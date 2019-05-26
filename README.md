@@ -2,7 +2,7 @@
 
 A 2-in-1 mostly useless Mumble and Discord Bot written in Python 3.
 
-A Mumble bot monitors users presence on a Mumble server and sends status messages to a Discord bot, which posts them in a channel.
+A Mumble bot monitors users presence on a Mumble server and sends status messages to a Discord bot, which posts them in a channel, and vice versa.
 
 It depends on:
   - [pymumble](https://github.com/azlux/pymumble)
@@ -34,13 +34,27 @@ cd discomblebot
 ```
 Download [libopus](https://archive.mozilla.org/pub/opus/win32/opusfile-v0.9-win32.zip) and unzip into discomblebot/libs.
 
+### Docker
+```
+git clone https://github.com/esabouraud/discomblebot.git
+cd discomblebot
+docker build -t discomblebot:latest .
+```
+
 ## Usage
+
+### Interactive
 Copy conf/discomble.conf.sample into conf/discomble.conf and fill in the parameters.
 ```
-python -m discomblebot -f conf/discomble.conf
+python -m discomblebot -f conf/discomble.conf -i
 ```
-Type `quit` + Enter or `Ctrl-C` to exit.
+Type `!status` + Enter to trigger status messages from bots
+Type `!quit` + Enter or `Ctrl-C` to exit.
+
+### Daemon with docker
+No volume needed.
+```
+docker run -d -e DISCOMBLE_CONF=$(<conf/discomble.conf) discomblebot
+```
 
 ## Todo
-- Monitor Discord voice connections and output status in Mumble text chat
-- Add invite chat commands to both bots 

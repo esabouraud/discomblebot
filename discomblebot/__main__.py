@@ -1,4 +1,4 @@
-"""Launcher, either interactive or daemon-like."""
+"""discomblebot launcher, either interactive or daemon-like."""
 
 import argparse
 import time
