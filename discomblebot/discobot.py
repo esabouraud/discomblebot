@@ -71,7 +71,7 @@ async def status():
     otherbot_comm_queue.put_nowait(status_str)
 
 async def invite(cmd, sender, recipient):
-    """"""
+    """Invite mumble user to discord"""
     # Invites are channel-level, not guild-level, oddly enough
     channel_invite = await channel.create_invite(
         max_age=86400, max_uses=1, unique=True, reason="discomble")
@@ -94,7 +94,7 @@ async def read_comm_queue(comm_queue):
                     # Does not seem to make client.run() stop
                     await client.close()
                     break
-                elif cmd_msg == commonbot.STATUS_BOTCMD:
+                if cmd_msg == commonbot.STATUS_BOTCMD:
                     #print(client.users)
                     await status()
                 elif cmd_msg == commonbot.INVITE_BOTCMD:

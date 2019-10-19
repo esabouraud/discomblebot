@@ -21,7 +21,7 @@ def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
         if cmd == "!quit":
             print("Quitting")
             break
-        elif cmd == "!status":
+        if cmd == "!status":
             discobot_cmd_queue.put_nowait(cmd)
             mumbot_cmd_queue.put_nowait(cmd)
         else:

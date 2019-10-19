@@ -45,7 +45,7 @@ class MumbleBot:
                 if cmd_msg == commonbot.QUIT_BOTCMD:
                     print("Mumble bot stopping on command: %s" % cmd_msg)
                     break
-                elif cmd_msg == commonbot.STATUS_BOTCMD:
+                if cmd_msg == commonbot.STATUS_BOTCMD:
                     self.status()
                 elif cmd_msg in (commonbot.INVITE_BOTCMD, commonbot.INVITERSP_BOTCMD):
                     param_msg = commonbot.get_bot_cmd_param(discord_msg)
