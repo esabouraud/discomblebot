@@ -57,15 +57,13 @@ def get_bot_cmd_param(message):
 def parse_command(start_char, cmd_rx, message):
     """Handle user or bot commands sent in queue or chat"""
     if message.startswith(start_char):
-        match_cmd = cmd_rx.match(message)
-        if match_cmd:
+        if match_cmd := cmd_rx.match(message):
             return match_cmd.group(1)
         return "unknown"
     return None
 
 def get_cmd_param(param_rx, message):
     """Get single param from command message"""
-    match_param = param_rx.match(message)
-    if match_param:
+    if match_param := param_rx.match(message):
         return match_param.group(1)
     return None

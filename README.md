@@ -1,6 +1,6 @@
 # discomblebot
 
-A 2-in-1 mostly useless Mumble and Discord Bot written in Python 3.
+A 2-in-1 mostly useless Mumble and Discord Bot written in Python 3.8.
 
 A Mumble bot monitors users presence on a Mumble server and sends status messages to a Discord bot, which posts them in a channel, and vice versa.
 

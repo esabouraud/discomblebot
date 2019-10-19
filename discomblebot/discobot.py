@@ -88,8 +88,7 @@ async def read_comm_queue(comm_queue):
     while True:
         with concurrent.futures.ThreadPoolExecutor() as pool:
             mumble_msg = await client.loop.run_in_executor(pool, comm_queue.get)
-            cmd_msg = commonbot.parse_bot_command(mumble_msg)
-            if cmd_msg:
+            if cmd_msg := commonbot.parse_bot_command(mumble_msg):
                 if cmd_msg == commonbot.QUIT_BOTCMD:
                     print("Discord bot stopping on command: %s" % cmd_msg)
                     # Does not seem to make client.run() stop

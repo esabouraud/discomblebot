@@ -41,8 +41,7 @@ class MumbleBot:
         """Main loop of the mumble bot"""
         while self.mumble.is_alive():
             discord_msg = self.comm_queue.get()
-            cmd_msg = commonbot.parse_bot_command(discord_msg)
-            if cmd_msg:
+            if cmd_msg := commonbot.parse_bot_command(discord_msg):
                 if cmd_msg == commonbot.QUIT_BOTCMD:
                     print("Mumble bot stopping on command: %s" % cmd_msg)
                     break
@@ -130,8 +129,7 @@ class MumbleBot:
         else:
             print("Mumble bot cannot identify output channel")
             return
-        cmd = commonbot.parse_chat_message(message.message)
-        if cmd is None:
+        if cmd := commonbot.parse_chat_message(message.message) is None:
             return
         if cmd == commonbot.HELLO_CMD:
             output_channel.send_text_message(
