@@ -4,9 +4,11 @@ import argparse
 import time
 from multiprocessing import Process, Queue
 
+from discomblebot import commonbot
 from discomblebot import confbot
 from discomblebot import discobot
 from discomblebot import mumbot
+from discomblebot.bot_msg_pb2 import BotMessage
 
 
 def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
@@ -22,8 +24,17 @@ def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
             print("Quitting")
             break
         if cmd == "!status":
-            discobot_cmd_queue.put_nowait(cmd)
-            mumbot_cmd_queue.put_nowait(cmd)
+            bot_message = BotMessage()
+            bot_message.type = BotMessage.Type.STATUS
+            bot_message.direction = BotMessage.Direction.REQUEST
+            bot_message.source = BotMessage.Source.CLI
+            # Work around serialization bug ? only 0s in enums yield empty buffer
+            bot_message.text = "yo"
+            if bot_message_str := commonbot.write_bot_message(bot_message):
+                discobot_cmd_queue.put_nowait(bot_message_str)
+                mumbot_cmd_queue.put_nowait(bot_message_str)
+            else:
+                print("WTF")
         else:
             print("Unknown command %s" % cmd)
             print("Supported commands are: !quit, !status")
@@ -93,8 +104,13 @@ def main():
             print("Terminating discomblebot")
 
         #Give bots a chance to exit gracefully
-        discobot_comm_queue.put_nowait("!quit")
-        mumbot_comm_queue.put_nowait("!quit")
+        bot_message = BotMessage()
+        bot_message.type = BotMessage.Type.QUIT
+        bot_message.direction = BotMessage.Direction.REQUEST
+        bot_message.source = BotMessage.Source.CLI
+        if bot_message_str := commonbot.write_bot_message(bot_message):
+            discobot_comm_queue.put_nowait(bot_message_str)
+            mumbot_comm_queue.put_nowait(bot_message_str)
 
         dbp.join(5)
         if dbp.is_alive():

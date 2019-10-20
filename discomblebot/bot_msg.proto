@@ -8,14 +8,24 @@ message BotMessage {
     STATUS = 0;
     INVITE = 1;
     QUIT = 2;
+    ACTIVITY = 3;
   }
  
   enum Direction {
     REQUEST = 0;
     RESPONSE = 1;
+    INFO = 2;
+  }
+
+  enum Source {
+    CLI = 0;
+    DISCORD = 1;
+    MUMBLE = 2;
   }
 
   Type type = 1;
   Direction direction = 2;
+  Source source = 3;
+  string text = 4;
 
 }
