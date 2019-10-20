@@ -58,6 +58,4 @@ docker run -d -e DISCOMBLE_CONF=$(<conf/discomble.conf) discomblebot
 ```
 
 ## Todo
-- Use protobuf for bot2bot communication, instead of current ad-hoc message format
-- Respond to commands in the same channel they were sent in
 - Find out how to stop using globals in discord bot
