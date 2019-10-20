@@ -70,7 +70,7 @@ async def on_voice_state_update(member, before, after):
         bot_message.type = BotMessage.Type.ACTIVITY
         bot_message.direction = BotMessage.Direction.INFO
         bot_message.source = BotMessage.Source.DISCORD
-        bot_message.text = activity_str
+        bot_message.std.text = activity_str
         if bot_message_str := commonbot.write_bot_message(bot_message):
             otherbot_comm_queue.put_nowait(bot_message_str)
 
@@ -88,20 +88,28 @@ async def status(channel=None):
     bot_message.type = BotMessage.Type.STATUS
     bot_message.direction = BotMessage.Direction.RESPONSE
     bot_message.source = BotMessage.Source.DISCORD
-    bot_message.text = status_str
+    bot_message.std.text = status_str
     if channel:
         bot_message.channel = channel
     if bot_message_str := commonbot.write_bot_message(bot_message):
         otherbot_comm_queue.put_nowait(bot_message_str)
 
-async def invite(cmd, sender, recipient):
+async def invite(channel, sender, recipient):
     """Invite mumble user to discord"""
     # Invites are channel-level, not guild-level, oddly enough
     channel_invite = await default_channel.create_invite(
         max_age=86400, max_uses=1, unique=True, reason="discomble")
     print(channel_invite)
-    otherbot_comm_queue.put_nowait(
-        "!%s|%s;%s;%s" % (cmd, sender, recipient, channel_invite.url))
+    bot_message = BotMessage()
+    bot_message.type = BotMessage.Type.INVITE
+    bot_message.direction = BotMessage.Direction.RESPONSE
+    bot_message.source = BotMessage.Source.DISCORD
+    bot_message.channel = channel
+    bot_message.invite.sender = sender
+    bot_message.invite.recipient = recipient
+    bot_message.invite.url = channel_invite.url
+    if bot_message_str := commonbot.write_bot_message(bot_message):
+        otherbot_comm_queue.put_nowait(bot_message_str)
 
 async def read_comm_queue(comm_queue):
     """Read queue expecting Mumble-bot issued messages or CLI commands (start with !).
@@ -125,20 +133,19 @@ async def read_comm_queue(comm_queue):
                         #print(client.users)
                         await status(bot_message.channel)
                     else:
-                        print("Status received from mumble bot: %s" % bot_message.text)
+                        print("Status received from mumble bot: %s" % bot_message.std.text)
                         if bot_message.channel:
                             channel = client.get_channel(int(bot_message.channel))
-                            await channel.send(bot_message.text)
+                            await channel.send(bot_message.std.text)
                         elif default_channel:
-                            await default_channel.send(bot_message.text)
+                            await default_channel.send(bot_message.std.text)
                 elif bot_message.type == bot_message.Type.ACTIVITY:
-                    print("Notification received from mumble bot: %s" % bot_message.text)
+                    print("Notification received from mumble bot: %s" % bot_message.std.text)
                     if default_channel:
-                        await default_channel.send(bot_message.text)
-                # elif cmd_msg == commonbot.INVITE_BOTCMD:
-                #     param_msg = commonbot.get_bot_cmd_param(mumble_msg)
-                #     params = param_msg.split(";", 1)
-                #     await invite(commonbot.INVITERSP_BOTCMD, params[0], params[1])
+                        await default_channel.send(bot_message.std.text)
+                elif bot_message.type == bot_message.Type.INVITE:
+                    if bot_message.direction == bot_message.Direction.REQUEST:
+                        await invite(bot_message.channel, bot_message.invite.sender, bot_message.invite.recipient)
                 # elif cmd_msg == commonbot.INVITERSP_BOTCMD:
                 #     param_msg = commonbot.get_bot_cmd_param(mumble_msg)
                 #     params = param_msg.split(";", 1)
@@ -149,7 +156,6 @@ async def read_comm_queue(comm_queue):
                 #         await usersdict[sender].send(invite_response)
                 #     else:
                 #         print("User %s not found" % sender)
-
 
 
 def run(comm_queue, mumbot_comm_queue, config):

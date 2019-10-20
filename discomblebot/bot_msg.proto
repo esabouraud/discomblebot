@@ -26,10 +26,23 @@ message BotMessage {
     MUMBLE = 3;
   }
 
+  message StandardMessage {
+    string text = 1;
+  }
+
+  message InviteMessage {
+    string sender = 1;
+    string recipient = 2;
+    string url = 3;
+  }
+
   Type type = 1;
   Direction direction = 2;
   Source source = 3;
   string channel = 4;
-  string text = 5;
+  oneof message_payload {
+    StandardMessage std = 5;
+    InviteMessage invite = 6;
+  }
 
 }
