@@ -1,6 +1,7 @@
 """Common code used by both bots."""
 
 import re
+from discomblebot import bot_msg_pb2
 
 # Display a simple hello message
 HELLO_CMD = "hello"
