@@ -28,13 +28,9 @@ def interactive_loop(discobot_cmd_queue, mumbot_cmd_queue):
             bot_message.type = BotMessage.Type.STATUS
             bot_message.direction = BotMessage.Direction.REQUEST
             bot_message.source = BotMessage.Source.CLI
-            # Work around serialization bug ? only 0s in enums yield empty buffer
-            bot_message.text = "yo"
             if bot_message_str := commonbot.write_bot_message(bot_message):
                 discobot_cmd_queue.put_nowait(bot_message_str)
                 mumbot_cmd_queue.put_nowait(bot_message_str)
-            else:
-                print("WTF")
         else:
             print("Unknown command %s" % cmd)
             print("Supported commands are: !quit, !status")

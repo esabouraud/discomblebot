@@ -50,16 +50,24 @@ class MumbleBot:
                     break
                 if bot_message.type == bot_message.Type.STATUS:
                     if bot_message.direction == bot_message.Direction.REQUEST:
-                        print("Status received from discord bot: %s" % bot_message.text)
-                        self.status()
+                        print("Status request from discord bot: %s" % bot_message.text)
+                        self.status(bot_message.channel)
                     else:
-                        print("Status received from discord bot: %s" % bot_message.text)
-                        my_channel_id = self.mumble.users.myself['channel_id']
-                        self.mumble.channels[my_channel_id].send_text_message(bot_message.text)
+                        print("Status response from discord bot: %s" % bot_message.text)
+                        if bot_message.channel:
+                            channel_id = int(bot_message.channel)
+                            if channel_id in self.mumble.users:
+                                output_channel = self.mumble.users[channel_id]
+                            else:
+                                output_channel = self.mumble.channels[channel_id]
+                        else:
+                            output_channel = self.mumble.channels[self.mumble.users.myself['channel_id']]
+                        if output_channel:
+                            output_channel.send_text_message(bot_message.text)
                 elif bot_message.type == bot_message.Type.ACTIVITY:
-                        print("Notification received from discord bot: %s" % bot_message.text)
-                        my_channel_id = self.mumble.users.myself['channel_id']
-                        self.mumble.channels[my_channel_id].send_text_message(bot_message.text)
+                    print("Notification received from discord bot: %s" % bot_message.text)
+                    my_channel_id = self.mumble.users.myself['channel_id']
+                    self.mumble.channels[my_channel_id].send_text_message(bot_message.text)
                 # elif cmd_msg in (commonbot.INVITE_BOTCMD, commonbot.INVITERSP_BOTCMD):
                 #     param_msg = commonbot.get_bot_cmd_param(discord_msg)
                 #     params = param_msg.split(";", 2)
@@ -95,7 +103,7 @@ class MumbleBot:
                 #                 "!%s|%s;Failed to find user %s in Mumble" % (
                 #                     commonbot.INVITERSP_BOTCMD, sender_name, recipient_name))
 
-    def status(self):
+    def status(self, channel=None):
         """Respond to status command"""
         #print(self.mumble.users)
         status_str = "%d users (%s) are connected on the Mumble server" % (
@@ -107,6 +115,8 @@ class MumbleBot:
         bot_message.direction = BotMessage.Direction.RESPONSE
         bot_message.source = BotMessage.Source.MUMBLE
         bot_message.text = status_str
+        if channel:
+            bot_message.channel = channel
         if bot_message_str := commonbot.write_bot_message(bot_message):
             self.otherbot_comm_queue.put(bot_message_str)
 
@@ -151,8 +161,9 @@ class MumbleBot:
         else:
             print("Mumble bot cannot identify output channel")
             return
-        if cmd := commonbot.parse_chat_message(message.message) is None:
+        if (cmd := commonbot.parse_chat_message(message.message)) is None:
             return
+        #print("Mumble bot CMD: %s" % cmd)
         if cmd == commonbot.HELLO_CMD:
             output_channel.send_text_message(
                 "Hello %s !" % self.mumble.users[message.actor]['name'])
@@ -166,6 +177,10 @@ class MumbleBot:
             bot_message.type = BotMessage.Type.STATUS
             bot_message.direction = BotMessage.Direction.REQUEST
             bot_message.source = BotMessage.Source.MUMBLE
+            if message.channel_id:
+                bot_message.channel = "%d" % message.channel_id[0]
+            elif message.session:
+                bot_message.channel = "%d" % message.actor
             if bot_message_str := commonbot.write_bot_message(bot_message):
                 self.otherbot_comm_queue.put_nowait(bot_message_str)
         # elif cmd == commonbot.INVITE_CMD:
