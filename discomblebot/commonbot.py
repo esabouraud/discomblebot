@@ -1,6 +1,8 @@
 """Common code used by both bots."""
 
 import re
+from google.protobuf import message as _message
+from discomblebot import bot_msg_pb2
 
 # Display a simple hello message
 HELLO_CMD = "hello"
@@ -57,15 +59,31 @@ def get_bot_cmd_param(message):
 def parse_command(start_char, cmd_rx, message):
     """Handle user or bot commands sent in queue or chat"""
     if message.startswith(start_char):
-        match_cmd = cmd_rx.match(message)
-        if match_cmd:
+        if match_cmd := cmd_rx.match(message):
             return match_cmd.group(1)
         return "unknown"
     return None
 
 def get_cmd_param(param_rx, message):
     """Get single param from command message"""
-    match_param = param_rx.match(message)
-    if match_param:
+    if match_param := param_rx.match(message):
         return match_param.group(1)
     return None
+
+def read_bot_message(message_string):
+    """Unmarshal protobuf message"""
+    bot_message = bot_msg_pb2.BotMessage()
+    try:
+        bot_message.ParseFromString(message_string)
+        return bot_message
+    except _message.Error as error:
+        print("Error unmarshalling bot protobuf message: %s" % error)
+        return None
+
+def write_bot_message(bot_message):
+    """Marshal protobuf message"""
+    try:
+        return bot_message.SerializeToString()
+    except _message.Error as error:
+        print("Error marshalling bot protobuf message: %s" % error)
+        return None

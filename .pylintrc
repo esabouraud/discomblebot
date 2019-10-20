@@ -1,0 +1,5 @@
+[MASTER]
+ignore-patterns=bot_msg_pb2.py
+
+[TYPECHECK]
+ignored-classes=BotMessage
