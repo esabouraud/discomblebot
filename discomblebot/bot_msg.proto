@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package discomblebot;
+
+message BotMessage {
+
+  enum Type {
+    DEFAULT_TYPE = 0;
+    STATUS = 1;
+    INVITE = 2;
+    QUIT = 3;
+    ACTIVITY = 4;
+  }
+ 
+  enum Direction {
+    DEFAULT_DIRECTION = 0;
+    REQUEST = 1;
+    RESPONSE = 2;
+    INFO = 3;
+  }
+
+  enum Source {
+    DEFAULT_SOURCE = 0;
+    CLI = 1;
+    DISCORD = 2;
+    MUMBLE = 3;
+  }
+
+  message StandardMessage {
+    string text = 1;
+  }
+
+  message InviteMessage {
+    string sender = 1;
+    string recipient = 2;
+    string url = 3;
+  }
+
+  Type type = 1;
+  Direction direction = 2;
+  Source source = 3;
+  string channel = 4;
+  oneof message_payload {
+    StandardMessage std = 5;
+    InviteMessage invite = 6;
+  }
+
+}
