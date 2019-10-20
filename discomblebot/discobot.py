@@ -48,10 +48,10 @@ async def on_message(message):
         bot_message.channel = "%d" % message.channel.id
         if bot_message_str := commonbot.write_bot_message(bot_message):
             otherbot_comm_queue.put_nowait(bot_message_str)
-    # elif cmd == commonbot.INVITE_CMD:
-    #     sender = message.author
-    #     recipient = commonbot.get_chat_cmd_param(message.content)
-    #     await invite(commonbot.INVITE_BOTCMD, sender, recipient)
+    elif cmd == commonbot.INVITE_CMD:
+        sender = message.author.name
+        recipient = commonbot.get_chat_cmd_param(message.content)
+        await invite("%d" % message.channel.id, sender, recipient, False)
     else:
         await message.channel.send("I do not understand this command.")
 
@@ -94,7 +94,7 @@ async def status(channel=None):
     if bot_message_str := commonbot.write_bot_message(bot_message):
         otherbot_comm_queue.put_nowait(bot_message_str)
 
-async def invite(channel, sender, recipient):
+async def invite(channel, sender, recipient, from_bot):
     """Invite mumble user to discord"""
     # Invites are channel-level, not guild-level, oddly enough
     channel_invite = await default_channel.create_invite(
@@ -102,7 +102,10 @@ async def invite(channel, sender, recipient):
     print(channel_invite)
     bot_message = BotMessage()
     bot_message.type = BotMessage.Type.INVITE
-    bot_message.direction = BotMessage.Direction.RESPONSE
+    if from_bot:
+        bot_message.direction = BotMessage.Direction.RESPONSE
+    else:
+        bot_message.direction = BotMessage.Direction.INFO
     bot_message.source = BotMessage.Source.DISCORD
     bot_message.channel = channel
     bot_message.invite.sender = sender
@@ -141,21 +144,14 @@ async def read_comm_queue(comm_queue):
                             await default_channel.send(bot_message.std.text)
                 elif bot_message.type == bot_message.Type.ACTIVITY:
                     print("Notification received from mumble bot: %s" % bot_message.std.text)
-                    if default_channel:
+                    if bot_message.channel:
+                        channel = client.get_channel(int(bot_message.channel))
+                        await channel.send(bot_message.std.text)
+                    elif default_channel:
                         await default_channel.send(bot_message.std.text)
                 elif bot_message.type == bot_message.Type.INVITE:
                     if bot_message.direction == bot_message.Direction.REQUEST:
-                        await invite(bot_message.channel, bot_message.invite.sender, bot_message.invite.recipient)
-                # elif cmd_msg == commonbot.INVITERSP_BOTCMD:
-                #     param_msg = commonbot.get_bot_cmd_param(mumble_msg)
-                #     params = param_msg.split(";", 1)
-                #     sender = params[0]
-                #     invite_response = params[1]
-                #     usersdict = {str(user): user for user in client.users}
-                #     if sender in usersdict:
-                #         await usersdict[sender].send(invite_response)
-                #     else:
-                #         print("User %s not found" % sender)
+                        await invite(bot_message.channel, bot_message.invite.sender, bot_message.invite.recipient, True)
 
 
 def run(comm_queue, mumbot_comm_queue, config):

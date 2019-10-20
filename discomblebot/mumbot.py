@@ -69,7 +69,7 @@ class MumbleBot:
                     my_channel_id = self.mumble.users.myself['channel_id']
                     self.mumble.channels[my_channel_id].send_text_message(bot_message.std.text)
                 elif bot_message.type == bot_message.Type.INVITE:
-                    if bot_message.direction == bot_message.Direction.RESPONSE:
+                    if bot_message.direction in [bot_message.Direction.INFO, bot_message.Direction.RESPONSE]:
                         sender_name = bot_message.invite.sender
                         recipient_name = bot_message.invite.recipient
                         invite_url = bot_message.invite.url
@@ -81,31 +81,31 @@ class MumbleBot:
                             self.mumble.users[usersdict[recipient_name]].send_text_message(
                                 "%s has invited you to a Discord server: <a href=\"%s\">%s</a>" % (
                                     sender_name, invite_url, invite_url))
-                            success_message = "%s has been invited to Discord." % (recipient_name)
-                            # Send OK message to mumble sender
-                            if sender_name in usersdict:
-                                self.mumble.users[usersdict[sender_name]].send_text_message(
-                                    success_message)
-                    #         invite_successful = True
-                    #     else:
-                    #         invite_successful = False
-                    #     if invite_successful:
-                    #         success_message = "%s has been invited to Discord." % (recipient_name)
-                    #         if cmd_msg == commonbot.INVITERSP_BOTCMD:
-                    #             # Send OK message to mumble sender
-                    #             if sender_name in usersdict and cmd_msg == commonbot.INVITERSP_BOTCMD:
-                    #                 self.mumble.users[usersdict[sender_name]].send_text_message(
-                    #                     success_message)
-                    #         else:
-                    #             # Send OK message to Discord sender
-                    #             self.otherbot_comm_queue.put("!%s|%s;%s" % (
-                    #                 commonbot.INVITERSP_BOTCMD, sender_name, success_message))
-                    #     else:
-                    #         if cmd_msg == commonbot.INVITE_BOTCMD:
-                    #             # Send error message to discord sender
-                    #             self.otherbot_comm_queue.put(
-                    #                 "!%s|%s;Failed to find user %s in Mumble" % (
-                    #                     commonbot.INVITERSP_BOTCMD, sender_name, recipient_name))
+                            invite_successful = True
+                        else:
+                            invite_successful = False
+                        if bot_message.direction == bot_message.Direction.RESPONSE:
+                            if invite_successful:
+                                success_message = "%s has been invited to Discord." % (recipient_name)
+                                # Send OK message to mumble sender
+                                if sender_name in usersdict:
+                                    self.mumble.users[usersdict[sender_name]].send_text_message(
+                                        success_message)
+                        else:
+                            new_bot_message = BotMessage()
+                            new_bot_message.type = BotMessage.Type.ACTIVITY
+                            new_bot_message.direction = BotMessage.Direction.INFO
+                            new_bot_message.source = BotMessage.Source.MUMBLE
+                            new_bot_message.channel = bot_message.channel
+                            # TODO improve invite response to discord text
+                            if invite_successful:
+                                # Send OK message to Discord sender
+                                new_bot_message.std.text = "Invite OK"
+                            else:
+                                # Send error message to discord sender
+                                new_bot_message.std.text = "Invite KO"
+                            if bot_message_str := commonbot.write_bot_message(new_bot_message):
+                                self.otherbot_comm_queue.put_nowait(bot_message_str)
 
     def status(self, channel=None):
         """Respond to status command"""
