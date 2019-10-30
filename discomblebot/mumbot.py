@@ -3,8 +3,6 @@
   - monitors actity and sends messages to be written on Discord
   - displays messages coming from Discord bot."""
 
-import time
-
 import pymumble_py3
 from pymumble_py3.constants import (
     PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED,
@@ -144,6 +142,7 @@ class MumbleBot:
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, self.msg_received_cb)
 
     def send_notification(self, text):
+        """Send unrequested message to other bot"""
         bot_message = BotMessage()
         bot_message.type = BotMessage.Type.ACTIVITY
         bot_message.direction = BotMessage.Direction.INFO
