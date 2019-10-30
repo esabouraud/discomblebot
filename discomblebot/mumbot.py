@@ -3,10 +3,13 @@
   - monitors actity and sends messages to be written on Discord
   - displays messages coming from Discord bot."""
 
+import time
+
 import pymumble_py3
 from pymumble_py3.constants import (
     PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED,
-    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED)
+    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, PYMUMBLE_CONN_STATE_CONNECTED, 
+    PYMUMBLE_CONNECTION_RETRY_INTERVAL)
 
 from discomblebot import confbot
 from discomblebot import commonbot
@@ -42,6 +45,17 @@ class MumbleBot:
         """Main loop of the mumble bot"""
         while self.mumble.is_alive():
             discord_msg = self.comm_queue.get()
+            if not self.mumble.is_alive():
+                print("Mumble bot thread died")
+                break
+            if self.mumble.connected != PYMUMBLE_CONN_STATE_CONNECTED:
+                print("Mumble bot waiting for reconnection")
+                while self.mumble.is_alive() and self.mumble.connected != PYMUMBLE_CONN_STATE_CONNECTED:
+                    time.sleep(PYMUMBLE_CONNECTION_RETRY_INTERVAL)
+                    self.mumble.is_ready()
+                if not self.mumble.is_alive():
+                    print("Mumble bot thread died while waiting for reconnection")
+                    break
             if bot_message := commonbot.read_bot_message(discord_msg):
                 print("Mumble bot: message received with type %d direction %s source %d" % (
                     bot_message.type, bot_message.direction, bot_message.source))
