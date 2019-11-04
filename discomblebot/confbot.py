@@ -4,7 +4,7 @@ import os
 import configparser
 from collections import namedtuple
 
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 
 CONF_ENV = "DISCOMBLE_CONF"
 DISCORD_SECTION = "discord"
