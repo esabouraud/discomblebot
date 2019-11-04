@@ -22,8 +22,13 @@ class MumbleBot:
         self.comm_queue = comm_queue
         self.otherbot_comm_queue = otherbot_comm_queue
         self.channel = config.channel
+        self.config = config
+        self.mumble = None
+
+    def start_client(self):
+        """Start or restart Mumble client"""
         self.mumble = pymumble_py3.Mumble(
-            config.server, config.nickname, int(config.port), config.password, reconnect=True)
+            self.config.server, self.config.nickname, int(self.config.port), self.config.password)
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, self.connected_cb)
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the end of the connection process
@@ -40,8 +45,10 @@ class MumbleBot:
 
     def loop(self):
         """Main loop of the mumble bot"""
-        while self.mumble.is_alive():
-            discord_msg = self.comm_queue.get()
+        while discord_msg := self.comm_queue.get():
+            if not self.mumble.is_alive():
+                print("Mumble bot thread died, restarting")
+                self.start_client()
             if bot_message := commonbot.read_bot_message(discord_msg):
                 print("Mumble bot: message received with type %d direction %s source %d" % (
                     bot_message.type, bot_message.direction, bot_message.source))
@@ -135,6 +142,7 @@ class MumbleBot:
         self.mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, self.msg_received_cb)
 
     def send_notification(self, text):
+        """Send unrequested message to other bot"""
         bot_message = BotMessage()
         bot_message.type = BotMessage.Type.ACTIVITY
         bot_message.direction = BotMessage.Direction.INFO
@@ -212,6 +220,7 @@ def run(comm_queue, otherbot_comm_queue, config):
     """Launch Mumble bot"""
     bot = MumbleBot(comm_queue, otherbot_comm_queue, config)
     try:
+        bot.start_client()
         bot.loop()
     except KeyboardInterrupt:
         print("Mumble bot stopping on its own")
