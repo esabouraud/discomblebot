@@ -6,7 +6,7 @@
 import pymumble_py3
 from pymumble_py3.constants import (
     PYMUMBLE_CLBK_CONNECTED, PYMUMBLE_CLBK_USERCREATED, PYMUMBLE_CLBK_USERREMOVED,
-    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED)
+    PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, PYMUMBLE_CONN_STATE_CONNECTED)
 
 from discomblebot import confbot
 from discomblebot import commonbot
@@ -33,6 +33,10 @@ class MumbleBot:
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the end of the connection process
         # mute and deafen the user (just to make clear he don't speak or listen)
+        if self.mumble.connected != PYMUMBLE_CONN_STATE_CONNECTED:
+            print("Mumble bot failed to connect to server %s:%s" % (
+                self.config.server, self.config.port))
+            return False
         self.mumble.users.myself.mute()
         self.mumble.users.myself.deafen()
         # join output channel
@@ -42,6 +46,7 @@ class MumbleBot:
                 channel.move_in()
             except pymumble_py3.errors.UnknownChannelError:
                 print("Mumble channel not found: %s" % self.channel)
+        return True
 
     def loop(self):
         """Main loop of the mumble bot"""
@@ -220,8 +225,8 @@ def run(comm_queue, otherbot_comm_queue, config):
     """Launch Mumble bot"""
     bot = MumbleBot(comm_queue, otherbot_comm_queue, config)
     try:
-        bot.start_client()
-        bot.loop()
+        if bot.start_client():
+            bot.loop()
     except KeyboardInterrupt:
         print("Mumble bot stopping on its own")
     print("Mumble bot final goodbye")
