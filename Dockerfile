@@ -1,6 +1,6 @@
 FROM python:3-alpine AS discomblebot-builder
 
-RUN apk add --update --no-cache git protobuf \
+RUN apk add --update --no-cache git protobuf gcc musl-dev \
 	&& rm -rf /var/cache/apk/*
 
 COPY requirements.txt discomblebot/
@@ -18,7 +18,6 @@ RUN git clone https://github.com/azlux/pymumble.git \
 COPY discomblebot discomblebot/
 
 RUN protoc --python_out=. discomblebot/bot_msg.proto
-
 
 FROM python:3-alpine
 
