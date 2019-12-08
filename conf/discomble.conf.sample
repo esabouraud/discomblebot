@@ -1,7 +1,9 @@
 [discord]
 # Discord bot access token
+# Get it from https://discordapp.com/developers/applications/XXXXXXXXXXXXXXXXXX/bots
 token=
-# Discord bot output channel
+# Discord bot default output channel id
+# Get it by right-clicking on text channel in Discord -> Copy id
 channel=
 
 [mumble]
@@ -9,7 +11,7 @@ channel=
 server=
 # Mumble bot server port
 port=
-# Mumble bot output channel
+# Mumble bot output channel name
 channel=
 # Mumble bot nickname
 nickname=
