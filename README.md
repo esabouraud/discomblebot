@@ -1,5 +1,7 @@
 # discomblebot
 
+[![docker status](https://img.shields.io/docker/cloud/build/esabouraud/discomblebot)](https://hub.docker.com/r/esabouraud/discomblebot/builds)
+
 A 2-in-1 mostly useless Mumble and Discord Bot written in Python 3.8.
 
 A Mumble bot monitors users presence on a Mumble server and sends status messages to a Discord bot, which posts them in a channel, and vice versa.
