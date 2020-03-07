@@ -9,8 +9,13 @@ A Mumble bot monitors users presence on a Mumble server and sends status message
 It depends on:
   - [pymumble](https://github.com/azlux/pymumble)
   - [discord.py](https://github.com/Rapptz/discord.py)
+  - [protobuf](https://developers.google.com/protocol-buffers)
   
 ## Installation
+
+### Prerequisites
+
+[Download](https://github.com/protocolbuffers/protobuf) and install the protocol buffer compiler.
 
 ### General
 ```
@@ -20,10 +25,11 @@ export PYTHONPATH=$(pwd)/pymumble
 git clone https://github.com/esabouraud/discomblebot.git
 cd discomblebot
 pip install -U -r requirements.txt
+protoc --python_out=. discomblebot/bot_msg.proto
 ```
 
 ### Windows
-A 32-bit version of Python 3 is required. pymumble depends on opuslib which in turn depends on libopus-0.dll.
+A 32-bit version of Python 3 is required. pymumble depends on opuslib which in turn depends on libopus-0.dll, which is only available as a 32-bit DLL.
 Thus, some tinkering is necessary to make pymumble work on Windows.
 ```
 git clone https://github.com/azlux/pymumble.git
@@ -33,15 +39,10 @@ py -3-32 -m pip install -U -r pymumble/requirements.txt discomblebot/requirement
 set PYTHONPATH=%cd%\pymumble;%cd%\opuslib
 set PATH=%PATH%;%cd%\discomblebot\libs
 cd discomblebot
+protoc --python_out=. discomblebot\bot_msg.proto
 ```
 Download [libopus](https://archive.mozilla.org/pub/opus/win32/opusfile-v0.9-win32.zip) and unzip into discomblebot/libs.
 
-### Docker
-```
-git clone https://github.com/esabouraud/discomblebot.git
-cd discomblebot
-docker build -t discomblebot:latest .
-```
 
 ## Usage
 
@@ -53,8 +54,23 @@ python -m discomblebot -f conf/discomble.conf -i
 Type `!status` + Enter to trigger status messages from bots
 Type `!quit` + Enter or `Ctrl-C` to exit.
 
-### Daemon with docker
-No volume needed.
+### Non-interactive
+```
+python -m discomblebot -f conf/discomble.conf
+```
+
+
+## Docker
+
+### Build
+```
+git clone https://github.com/esabouraud/discomblebot.git
+cd discomblebot
+docker build -t discomblebot:latest .
+```
+
+### Run as daemon
+Volume usage can be avoided by setting the content of the configuration file into the DISCOMBLE_CONF environment variable.
 ```
 docker run -d -e DISCOMBLE_CONF=$(<conf/discomble.conf) discomblebot
 ```
