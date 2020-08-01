@@ -100,6 +100,7 @@ async def on_voice_state_update(member, before, after):
     elif before.channel is not None and after.channel is None:
         activity_str = "User %s disabled voice on the Discord server" % member.name
     if activity_str:
+        # Notify Mumble bot of Discord activity
         bot_message = BotMessage()
         bot_message.type = BotMessage.Type.ACTIVITY
         bot_message.direction = BotMessage.Direction.INFO
@@ -107,6 +108,8 @@ async def on_voice_state_update(member, before, after):
         bot_message.std.text = activity_str
         if bot_message_str := commonbot.write_bot_message(bot_message):
             otherbot_comm_queue.put_nowait(bot_message_str)
+        # Also log activity in Discord
+        await default_channel.send(activity_str)
 
 async def status(channel=None):
     """Respond to status command"""
