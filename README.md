@@ -88,7 +88,5 @@ docker run -d -e DISCOMBLE_CONF=$(<conf/discomble.conf) discomblebot
 ## Todo
 
 - Find out how to stop using globals in discord bot
-- Create (if missing) and write output to a private text channel in discord
-- Add command granting access to output text channel in discord
 - Improve inline help contents
 - Add help command as status message for Discord bot

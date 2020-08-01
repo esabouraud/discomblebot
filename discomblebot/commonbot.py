@@ -14,8 +14,14 @@ STATUS_CMD = "status"
 VERSION_CMD = "version"
 # Invite user to other server
 INVITE_CMD = "invite"
+# Subscribe to output text channel (Discord only)
+SUBSCRIBE_CMD = "subscribe"
+# Unsubscribe to output text channel (Discord only)
+UNSUBSCRIBE_CMD = "unsubscribe"
 # All supported chat commands (start with $)
-CHAT_COMMANDS = [HELLO_CMD, HELP_CMD, STATUS_CMD, VERSION_CMD, INVITE_CMD]
+CHAT_COMMANDS = [
+    HELLO_CMD, HELP_CMD, STATUS_CMD, VERSION_CMD,
+    INVITE_CMD, SUBSCRIBE_CMD, UNSUBSCRIBE_CMD]
 # Regexp matching supported commands
 CHAT_CMD_RX = re.compile("^\\$(%s)(?:\\s.*)?$" % "|".join(CHAT_COMMANDS))
 # Regexp matching a command, to extract a following parameter (separator=whitespace)

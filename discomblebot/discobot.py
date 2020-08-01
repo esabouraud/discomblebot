@@ -12,17 +12,38 @@ from discomblebot import commonbot
 from discomblebot.bot_msg_pb2 import BotMessage
 
 client = discord.Client()
-default_channel_id = None
+discord_config = None
+guild = None
 default_channel = None
+subscriber_role = None
 otherbot_comm_queue = None
 
 
 @client.event
 async def on_ready():
     """Finalize bot connection to Discord"""
+    global guild
     global default_channel
+    global subscriber_role
     print("We have logged in as {0.user}".format(client))
-    default_channel = client.get_channel(default_channel_id)
+    if (guild := client.get_guild(int(discord_config.guild_id))) is None:
+        raise Exception("Bot is not connected to guild %s" % discord_config.guild_id)
+    roles_dict = {role.name: role for role in guild.roles}
+    if discord_config.role_name in roles_dict:
+        subscriber_role = roles_dict[discord_config.role_name]
+    else:
+        subscriber_role = await guild.create_role(name=discord_config.role_name)
+    channels_dict = {channel.name: channel for channel in guild.channels}
+    if discord_config.channel_name in channels_dict:
+        default_channel = channels_dict[discord_config.channel_name]
+    else:
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            subscriber_role: discord.PermissionOverwrite(read_messages=True),
+            guild.me: discord.PermissionOverwrite(read_messages=True)
+        }
+        default_channel = await guild.create_text_channel(
+            discord_config.channel_name, overwrites=overwrites)
     print("Output default channel is '%s'" % default_channel)
     await status()
 
@@ -52,6 +73,18 @@ async def on_message(message):
         sender = message.author.name
         recipient = commonbot.get_chat_cmd_param(message.content)
         await invite("%d" % message.channel.id, sender, recipient, False)
+    elif cmd == commonbot.SUBSCRIBE_CMD:
+        if member := guild.get_member(message.author.id):
+            await member.add_roles(subscriber_role)
+            await message.channel.send(
+                "You have been assigned the %s role on server: %s" % (
+                    subscriber_role.name, guild.name))
+    elif cmd == commonbot.UNSUBSCRIBE_CMD:
+        if member := guild.get_member(message.author.id):
+            await member.remove_roles(subscriber_role)
+            await message.channel.send(
+                "You have been unassigned the %s role on server: %s" % (
+                    subscriber_role.name, guild.name))
     else:
         await message.channel.send("I do not understand this command.")
 
@@ -151,7 +184,9 @@ async def read_comm_queue(comm_queue):
                         await default_channel.send(bot_message.std.text)
                 elif bot_message.type == bot_message.Type.INVITE:
                     if bot_message.direction == bot_message.Direction.REQUEST:
-                        await invite(bot_message.channel, bot_message.invite.sender, bot_message.invite.recipient, True)
+                        await invite(
+                            bot_message.channel, bot_message.invite.sender,
+                            bot_message.invite.recipient, True)
 
 
 def run(comm_queue, mumbot_comm_queue, config):
@@ -160,10 +195,10 @@ def run(comm_queue, mumbot_comm_queue, config):
     mumbot_comm_queue is used to send messages to Mumble bot
     config contains the server parameters"""
 
-    global default_channel_id
+    global discord_config
     global otherbot_comm_queue
     otherbot_comm_queue = mumbot_comm_queue
-    default_channel_id = int(config.channel)
+    discord_config = config
     client.loop.create_task(read_comm_queue(comm_queue))
     try:
         client.run(config.token)
