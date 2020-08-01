@@ -20,10 +20,16 @@ SUBSCRIBE_CMD = "subscribe"
 UNSUBSCRIBE_CMD = "unsubscribe"
 # All supported chat commands (start with $)
 CHAT_COMMANDS = [
-    HELLO_CMD, HELP_CMD, STATUS_CMD, VERSION_CMD,
-    INVITE_CMD, SUBSCRIBE_CMD, UNSUBSCRIBE_CMD]
+    (HELP_CMD, "Display this help message"),
+    (VERSION_CMD, "Get the current version of the bot"),
+    (HELLO_CMD, "Greet the bot"),
+    (STATUS_CMD, "List users connected to voice chat"),
+    (INVITE_CMD, "[Mumble user name] Send an invite to the Discord Server, to a Mumble user"),
+    (SUBSCRIBE_CMD, "[Discord only] Subscribe to the voice chat activity monitoring channel"),
+    (UNSUBSCRIBE_CMD, "[Discord only] Unsubscribe to the voice chat activity monitoring channel")]
 # Regexp matching supported commands
-CHAT_CMD_RX = re.compile("^\\$(%s)(?:\\s.*)?$" % "|".join(CHAT_COMMANDS))
+CHAT_CMD_RX = re.compile("^\\$(%s)(?:\\s.*)?$" % "|".join(
+    [command[0] for command in CHAT_COMMANDS]))
 # Regexp matching a command, to extract a following parameter (separator=whitespace)
 CHAT_PARAM_RX = re.compile("^\\$.+\\s+([^\\s]+).*$")
 
@@ -52,7 +58,13 @@ def get_chat_cmd_param(message):
 
 def get_chat_help_message():
     """Return inline help string"""
-    return "Available commands are: %s" % ", ".join(CHAT_COMMANDS)
+    help_message = [
+        "discomble is a 2-in-1 Mumble and Discord Bot.",
+        "It monitors voice chat activity on a Mumble and a Discord server.",
+        "Available commands are:"]
+    for command in CHAT_COMMANDS:
+        help_message.append("\t$%s: %s" % command)
+    return "\n".join(help_message)
 
 def parse_bot_command(message):
     """Handle user or bot commands sent in queue"""
