@@ -4,12 +4,12 @@ import os
 import configparser
 from collections import namedtuple
 
-VERSION = "0.4.5"
+VERSION = "0.5.0"
 
 CONF_ENV = "DISCOMBLE_CONF"
 DISCORD_SECTION = "discord"
 MUMBLE_SECTION = "mumble"
-DiscordConf = namedtuple("DiscordConf", ["token", "channel"])
+DiscordConf = namedtuple("DiscordConf", ["token", "guild_id", "channel_name", "role_name"])
 MumbleConf = namedtuple("MumbleConf", ["server", "port", "nickname", "password", "channel"])
 
 def load_configuration(path, environment):

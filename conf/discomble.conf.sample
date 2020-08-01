@@ -2,9 +2,14 @@
 # Discord bot access token
 # Get it from https://discordapp.com/developers/applications/XXXXXXXXXXXXXXXXXX/bots
 token=
-# Discord bot default output channel id
-# Get it by right-clicking on text channel in Discord -> Copy id
-channel=
+# Discord bot guild id
+# Get it by right-clicking on server in Discord -> Copy id
+guild_id=
+# Discord bot private output channel name
+channel_name=
+# Discord bot subscriber role name
+# Members are allowed to read private output channel
+role_name=
 
 [mumble]
 # Mumble bot server hostname
