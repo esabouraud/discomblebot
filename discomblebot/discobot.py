@@ -11,7 +11,8 @@ from discomblebot import confbot
 from discomblebot import commonbot
 from discomblebot.bot_msg_pb2 import BotMessage
 
-client = discord.Client()
+client = discord.Client(activity=discord.Game(
+    "$%s $%s $%s" % (commonbot.STATUS_CMD, commonbot.SUBSCRIBE_CMD, commonbot.HELP_CMD)))
 discord_config = None
 guild = None
 default_channel = None
