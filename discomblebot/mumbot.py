@@ -148,6 +148,7 @@ class MumbleBot:
 
     def send_notification(self, text):
         """Send unrequested message to other bot"""
+        # Notify Discord bot of Mumble activity
         bot_message = BotMessage()
         bot_message.type = BotMessage.Type.ACTIVITY
         bot_message.direction = BotMessage.Direction.INFO
@@ -155,6 +156,9 @@ class MumbleBot:
         bot_message.std.text = text
         if bot_message_str := commonbot.write_bot_message(bot_message):
             self.otherbot_comm_queue.put_nowait(bot_message_str)
+        # Also log activity in Mumble
+        my_channel_id = self.mumble.users.myself['channel_id']
+        self.mumble.channels[my_channel_id].send_text_message(text)
 
     def user_created_cb(self, user):
         """A user is connected on the server."""
