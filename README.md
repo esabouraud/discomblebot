@@ -1,6 +1,6 @@
 # discomblebot
 
-[![docker status](https://img.shields.io/docker/cloud/build/esabouraud/discomblebot)](https://hub.docker.com/r/esabouraud/discomblebot/builds)
+[![ci status](https://github.com/esabouraud/discomblebot/workflows/ci/badge.svg?branch=develop)](https://github.com/esabouraud/discomblebot/actions?query=workflow%3Aci+branch%3Adevelop)
 
 A 2-in-1 mostly useless Mumble and Discord Bot written in Python 3.8.
 
